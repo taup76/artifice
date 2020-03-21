@@ -41,7 +41,6 @@ class Board:
 
     def draw_card(self, player):
         card = self.draw_list.pop(0)
-        print(card.to_string())
         player.append(card)
 
     def play_card(self, player, idx):
@@ -56,10 +55,10 @@ class Board:
 
 
 class Player:
-    card_list = []
 
     def __init__(self, name):
         self.name = name
+        self.card_list = []
 
     def init_hand(self, board, nb_card):
         for i in range(nb_card):
@@ -73,10 +72,6 @@ class Player:
 
 
 
-def init_player():
-    print("hello world!")
-
-
 def main():
 
 
@@ -86,8 +81,10 @@ def main():
     my_player1 = Player('Celine')
     my_player2 = Player('Simon')
     my_player1.init_hand(myBoard, 4)
-    my_player2.init_hand(myBoard, 4)
+    print(my_player1.name)
     print(my_player1.card_list[2].to_string())
+    my_player2.init_hand(myBoard, 4)
+    print(my_player2.name)
     print(my_player2.card_list[2].to_string())
 
 if __name__ == "__main__":
