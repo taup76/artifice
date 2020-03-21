@@ -1,9 +1,7 @@
 import sys
 from PyQt5.QtWidgets import QApplication, QWidget, QPushButton, QGridLayout, QFormLayout, QLabel, QLineEdit, QHBoxLayout, QVBoxLayout
-from PyQt5.QtCore import *
 from PyQt5.QtGui import *
-from PyQt5.QtCore import pyqtSlot
-
+import server as srv
 
 class Fenetre(QWidget):
     def __init__(self):
@@ -50,10 +48,10 @@ class Fenetre(QWidget):
         layout_hands = QVBoxLayout()
         wid_hands.setLayout(layout_hands)
 
-        cartes_celine = ["r1", "r4", "b2", "w5", "y2"]
+        cartes_celine = [srv.Card('r','1'), srv.Card('r','4'), srv.Card('b','2'), srv.Card('w','5'), srv.Card('y','2')]
         celine_hand = self.hand_wid(list_player[0],cartes_celine)
         layout_hands.addWidget(celine_hand)
-        cartes_simon= ["r2", "b4", "b1", "w1", "y4"]
+        cartes_simon = [srv.Card('v','2'), srv.Card('w','4'), srv.Card('b','1'), srv.Card('y','1'), srv.Card('v','4')]
         simon_hand = self.hand_wid(list_player[1],cartes_simon)
         layout_hands.addWidget(simon_hand)
 
@@ -75,22 +73,23 @@ class Fenetre(QWidget):
         layout_hand.addWidget(wid_cards)
         wid_cards.setLayout(layout_card)
         for carte in liste_carte:
-            path_to_im = "images/" + carte
-            wid_carte = QCarte(carte, path_to_im)
+            path_to_im = "images/" + carte.to_string()
+            wid_carte = QCarte(carte)
             layout_card.addWidget(wid_carte)
         return wid_hand
 
 # Définition de la classe Qcarte ---------------------------
 class QCarte(QPushButton):
     # Classe graphique pour representer une carte
-    def __init__(self, carte, path_to_image):
+    def __init__(self, carte):
         QPushButton.__init__(self)
-        pixmap = QPixmap(path_to_image)
+        path_to_im = "images/" + carte.to_string()
+        pixmap = QPixmap(path_to_im)
         ButtonIcon = QIcon(pixmap)
         self.setIcon(ButtonIcon)
         self.setIconSize(pixmap.rect().size())
         self.carte = carte
-        self.image = path_to_image
+        self.image = path_to_im
 
     def __str__(self):
         return self.carte

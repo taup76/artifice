@@ -7,7 +7,7 @@ class Card:
         self.value = value
 
     def to_string(self):
-        return self.color + ' ' + str(self.value)
+        return self.color + '' + str(self.value)
 
 
 class Stack:
