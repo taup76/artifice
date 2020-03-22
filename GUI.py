@@ -106,21 +106,18 @@ class QCarte(QPushButton):
         return self.carte
 
     def on_click(self):
-        print(self.selected)
         if self.selected:
             path_to_im = "images/" + self.carte.to_string()
             pixmap = QPixmap(path_to_im)
             ButtonIcon = QIcon(pixmap)
             self.setIcon(ButtonIcon)
             self.selected = False
-            print("cliqué")
         else:
             path_to_im = "images/small/" + self.carte.to_string()
             pixmap = QPixmap(path_to_im)
             ButtonIcon = QIcon(pixmap)
             self.setIcon(ButtonIcon)
             self.selected = True
-            print("non cliqué")
 
 
 
