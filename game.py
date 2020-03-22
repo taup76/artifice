@@ -6,6 +6,7 @@ class Card:
         if dic is None:
             self.color = color
             self.value = value
+            self.selected = False
         else:
             self.from_dic(dic)
 
@@ -25,6 +26,7 @@ class Stack:
         if array is None:
             self.card_list = []
         else:
+            self.card_list = []
             self.from_array(array)
 
     def append(self, card):
@@ -47,6 +49,9 @@ class Stack:
             card = Card(dic=dic_card)
             self.append(card)
 
+    def get_length(self):
+        return len(self.card_list)
+
 
 class Board:
     def __init__(self, dic=None):
@@ -58,13 +63,15 @@ class Board:
             self.miss = 3
             self.init_draw()
         else:
+            self.stack_dic = {}
             self.from_dic(dic)
 
     def to_string(self):
         out_str = 'stacks \n'
         for key in self.stack_dic.keys():
             out_str += key + ' '
-            for card in self.stack_dic[key]:
+            print(self.stack_dic[key])
+            for card in self.stack_dic[key].card_list:
                 out_str += card.to_string() + ' '
             out_str += '\n'
         out_str += "\n draw :" + str(len(self.draw_list)) + " cards"
@@ -176,9 +183,11 @@ class Player:
 
 class Team:
     def __init__(self, dic=None):
+        print(dic)
         if dic is None:
             self.player_dic = {}
         else:
+            self.player_dic ={}
             self.from_dic(dic)
 
     def add_player(self, player):

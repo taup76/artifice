@@ -2,6 +2,8 @@ import sys
 from PyQt5.QtWidgets import QApplication, QWidget, QPushButton, QGridLayout, QFormLayout, QLabel, QLineEdit, QHBoxLayout, QVBoxLayout
 from PyQt5.QtGui import *
 import server as srv
+import game as gm
+import zmq, json
 
 class Fenetre(QWidget):
     def __init__(self):
@@ -10,12 +12,24 @@ class Fenetre(QWidget):
         self.layout_principal = QGridLayout()
         self.layout_tas = QGridLayout()
 
+        # On affiche le bouton pour rejoindre la partie
+        self.but_join = QPushButton("Rejoindre")
+        self.join_game()
+        # self.but_join.clicked.connect(self.join_game)
+
         # On affiche les tas de cartes
         self.wid_tas = QWidget()
         self.wid_tas.setLayout(self.layout_tas)
 
-        # On créé le tirage initial du board
-        self.board = srv.Board()
+        # # initialize game
+        # self.board = gm.Board()
+        # self.team = gm.Team()
+        #
+        # # initialize player 1
+        # self.team.add_player(gm.Player('Celine'))
+        # self.team.add_player(gm.Player('Simon'))
+        # self.team.add_player(gm.Player('Loris'))
+        # self.team.init_hands(self.board)
 
         # Ordre ['r','b','y','g','w']
         self.tas_labels = {'r': QLabel("r0"), 'b': QLabel("b0"), 'y': QLabel("y0"), 'g': QLabel("g0"), 'w': QLabel("w0")}
@@ -45,36 +59,27 @@ class Fenetre(QWidget):
         self.layout_actions.addWidget(self.but_dismiss)
 
         # On affiche les mains des joueurs
-        self.list_player = ["Céline", "Simon"]
+        # self.list_player = ["Céline", "Simon"]
+        self.list_player = self.team.player_dic.keys()
         self.wid_hands = QWidget()
         self.layout_hands = QVBoxLayout()
         self.wid_hands.setLayout(self.layout_hands)
 
-        self.cartes_celine = [srv.Card('r','1'), srv.Card('r','4'), srv.Card('b','2'), srv.Card('w','5'), srv.Card('y','2')]
-        self.celine_hand = self.hand_wid(self.list_player[0],self.cartes_celine)
-        self.layout_hands.addWidget(self.celine_hand)
-        self.cartes_simon = [srv.Card('v','2'), srv.Card('w','4'), srv.Card('b','1'), srv.Card('y','1'), srv.Card('v','4')]
-        self.simon_hand = self.hand_wid(self.list_player[1],self.cartes_simon)
-        self.layout_hands.addWidget(self.simon_hand)
+        for joueur in self.list_player:
+            cartes_joueur = self.team.player_dic[joueur].card_list
+            wid_main = self.hand_wid(joueur, cartes_joueur)
+            self.layout_hands.addWidget(wid_main)
 
         # On remplit le layout principal
-        self.layout_principal.addWidget(self.wid_tas,1,1)
-        self.layout_principal.addWidget(self.wid_clue_miss,2,1)
-        self.layout_principal.addWidget(self.wid_actions,3,1)
-        self.layout_principal.addWidget(self.wid_hands,1,2)
+        self.layout_principal.addWidget(self.but_join,1,1)
+        self.layout_principal.addWidget(self.wid_tas,2,1)
+        self.layout_principal.addWidget(self.wid_clue_miss,3,1)
+        self.layout_principal.addWidget(self.wid_actions,4,1)
+        self.layout_principal.addWidget(self.wid_hands,2,2)
         self.setLayout(self.layout_principal)
         self.setWindowTitle("Artifice")
 
-        #TEST - A retirer ----
-        carte_r1 = srv.Card('r', 1)
-        carte_r2 = srv.Card('r', 2)
-        carte_r3 = srv.Card('r', 3)
-        self.board.stack_list['r'] = [carte_r1, carte_r2, carte_r3]
-        self.draw_board()
-        self.wid_tas.update()
-        #----------------------
-
-    def hand_wid(self,joueur,liste_carte):
+    def hand_wid(self,joueur,stack_carte):
         wid_hand = QWidget()
         layout_hand = QVBoxLayout()
         wid_hand.setLayout(layout_hand)
@@ -83,7 +88,7 @@ class Fenetre(QWidget):
         wid_cards = QWidget()
         layout_hand.addWidget(wid_cards)
         wid_cards.setLayout(layout_card)
-        for carte in liste_carte:
+        for carte in stack_carte.card_list:
             path_to_im = "images/" + carte.to_string()
             wid_carte = QCarte(carte)
             layout_card.addWidget(wid_carte)
@@ -94,9 +99,10 @@ class Fenetre(QWidget):
         self.draw_all_hands()
 
     def draw_board(self):
-        for key in self.board.stack_list.keys():
-            if len(self.board.stack_list[key]) > 0:
-                self.tas_labels[key].setText(self.board.stack_list[key][-1].to_string())
+        for key in self.board.stack_dic.keys():
+            print(self.board.to_string())
+            if self.board.stack_dic[key].get_length() > 0:
+                self.tas_labels[key].setText(self.board.stack_dic[key][-1].to_string())
             else:
                 self.tas_labels[key].setText("0")
 
@@ -106,6 +112,20 @@ class Fenetre(QWidget):
     def draw_all_hands(self):
         for joueur in self.list_player:
             self.draw_hand(self, joueur)
+
+    def join_game(self):
+        context = zmq.Context()
+        #  Socket to talk to server
+        print("Connecting to hello world server…")
+        socket = context.socket(zmq.REQ)
+        socket.connect("tcp://localhost:5555")
+        socket.send(b"Hello")
+        #  Get the reply.
+        message = socket.recv()
+        game_dic = json.loads(message)
+        self.team = gm.Team(game_dic['team'])
+        print(self.team.to_dic())
+        self.board = gm.Board(game_dic['board'])
 
 
 # Définition de la classe Qcarte ---------------------------
