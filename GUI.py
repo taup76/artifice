@@ -7,63 +7,72 @@ class Fenetre(QWidget):
     def __init__(self):
         QWidget.__init__(self)
 
-        layout_principal = QGridLayout()
-        layout_tas = QGridLayout()
+        self.layout_principal = QGridLayout()
+        self.layout_tas = QGridLayout()
 
         # On affiche les tas de cartes
-        wid_tas = QWidget()
-        wid_tas.setLayout(layout_tas)
+        self.wid_tas = QWidget()
+        self.wid_tas.setLayout(self.layout_tas)
 
-        board = srv.Board()
-        board.init_draw()
-        top_blanc = 0
-        self.label_blanc = QLabel("Blanc :" + str(top_blanc))
-        top_bleu = 0
-        self.label_bleu = QLabel("Bleu :" + str(top_bleu))
-        top_vert = 0
-        self.label_vert = QLabel("Vert :" + str(top_vert))
-        top_rouge = 0
-        self.label_rouge = QLabel("Rouge :" + str(top_rouge))
-        top_jaune = 0
-        self.label_jaune = QLabel("Jaune :" + str(top_jaune))
+        # On créé le tirage initial du board
+        self.board = srv.Board()
 
-        layout_tas.addWidget(self.label_blanc,1,1)
-        layout_tas.addWidget(self.label_bleu,1,2)
-        layout_tas.addWidget(self.label_vert,1,3)
-        layout_tas.addWidget(self.label_rouge,2,1)
-        layout_tas.addWidget(self.label_jaune,2,2)
+        # Ordre ['r','b','y','g','w']
+        self.tas_labels = {'r': QLabel("r0"), 'b': QLabel("b0"), 'y': QLabel("y0"), 'g': QLabel("g0"), 'w': QLabel("w0")}
+
+        self.layout_tas.addWidget(self.tas_labels['r'],1,1)
+        self.layout_tas.addWidget(self.tas_labels['b'],1,2)
+        self.layout_tas.addWidget(self.tas_labels['y'],1,3)
+        self.layout_tas.addWidget(self.tas_labels['g'],2,1)
+        self.layout_tas.addWidget(self.tas_labels['w'],2,2)
 
         # On affiche les indices et les bombes erreurs
-        wid_clue_miss = QWidget()
-        layout_clue = QHBoxLayout()
-        wid_clue_miss.setLayout(layout_clue)
-        nb_clue = 5
-        nb_miss = 3
-        label_clue = QLabel("Indice :" + str(nb_clue))
-        label_miss = QLabel("Erreurs :" + str(nb_miss))
-        layout_clue.addWidget(label_clue)
-        layout_clue.addWidget(label_miss)
+        self.wid_clue_miss = QWidget()
+        self.layout_clue = QHBoxLayout()
+        self.wid_clue_miss.setLayout(self.layout_clue)
+        self.label_clue = QLabel("Indice :" + str(self.board.clues))
+        self.label_miss = QLabel("Erreurs :" + str(self.board.miss))
+        self.layout_clue.addWidget(self.label_clue)
+        self.layout_clue.addWidget(self.label_miss)
+
+        # On affiche les boutons pour jouer ou défausser les cartes sélectionnées
+        self.wid_actions = QWidget()
+        self.but_play = QPushButton("Jouer")
+        self.but_dismiss = QPushButton("Défausser")
+        self.layout_actions = QHBoxLayout()
+        self.wid_actions.setLayout(self.layout_actions)
+        self.layout_actions.addWidget(self.but_play)
+        self.layout_actions.addWidget(self.but_dismiss)
 
         # On affiche les mains des joueurs
-        list_player = ["Céline", "Simon"]
-        wid_hands = QWidget()
-        layout_hands = QVBoxLayout()
-        wid_hands.setLayout(layout_hands)
+        self.list_player = ["Céline", "Simon"]
+        self.wid_hands = QWidget()
+        self.layout_hands = QVBoxLayout()
+        self.wid_hands.setLayout(self.layout_hands)
 
-        cartes_celine = [srv.Card('r','1'), srv.Card('r','4'), srv.Card('b','2'), srv.Card('w','5'), srv.Card('y','2')]
-        celine_hand = self.hand_wid(list_player[0],cartes_celine)
-        layout_hands.addWidget(celine_hand)
-        cartes_simon = [srv.Card('v','2'), srv.Card('w','4'), srv.Card('b','1'), srv.Card('y','1'), srv.Card('v','4')]
-        simon_hand = self.hand_wid(list_player[1],cartes_simon)
-        layout_hands.addWidget(simon_hand)
-
+        self.cartes_celine = [srv.Card('r','1'), srv.Card('r','4'), srv.Card('b','2'), srv.Card('w','5'), srv.Card('y','2')]
+        self.celine_hand = self.hand_wid(self.list_player[0],self.cartes_celine)
+        self.layout_hands.addWidget(self.celine_hand)
+        self.cartes_simon = [srv.Card('v','2'), srv.Card('w','4'), srv.Card('b','1'), srv.Card('y','1'), srv.Card('v','4')]
+        self.simon_hand = self.hand_wid(self.list_player[1],self.cartes_simon)
+        self.layout_hands.addWidget(self.simon_hand)
 
         # On remplit le layout principal
-        layout_principal.addWidget(wid_tas,1,1)
-        layout_principal.addWidget(wid_clue_miss,2,1)
-        layout_principal.addWidget(wid_hands,1,2)
-        self.setLayout(layout_principal)
+        self.layout_principal.addWidget(self.wid_tas,1,1)
+        self.layout_principal.addWidget(self.wid_clue_miss,2,1)
+        self.layout_principal.addWidget(self.wid_actions,3,1)
+        self.layout_principal.addWidget(self.wid_hands,1,2)
+        self.setLayout(self.layout_principal)
         self.setWindowTitle("Artifice")
+
+        #TEST - A retirer ----
+        carte_r1 = srv.Card('r', 1)
+        carte_r2 = srv.Card('r', 2)
+        carte_r3 = srv.Card('r', 3)
+        self.board.stack_list['r'] = [carte_r1, carte_r2, carte_r3]
+        self.draw_board()
+        self.wid_tas.update()
+        #----------------------
 
     def hand_wid(self,joueur,liste_carte):
         wid_hand = QWidget()
@@ -82,10 +91,22 @@ class Fenetre(QWidget):
 
     def draw_game(self):
         self.draw_board()
-        return 1
+        self.draw_all_hands()
 
-    def draw_board(self, board):
-        self.label_blanc = board['w']
+    def draw_board(self):
+        for key in self.board.stack_list.keys():
+            if len(self.board.stack_list[key]) > 0:
+                self.tas_labels[key].setText(self.board.stack_list[key][-1].to_string())
+            else:
+                self.tas_labels[key].setText("0")
+
+    def draw_hand(self, joueur):
+        print("TODO")
+
+    def draw_all_hands(self):
+        for joueur in self.list_player:
+            self.draw_hand(self, joueur)
+
 
 # Définition de la classe Qcarte ---------------------------
 class QCarte(QPushButton):
@@ -118,7 +139,6 @@ class QCarte(QPushButton):
             ButtonIcon = QIcon(pixmap)
             self.setIcon(ButtonIcon)
             self.selected = True
-
 
 
 app = QApplication.instance()
