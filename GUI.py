@@ -21,16 +21,6 @@ class Fenetre(QWidget):
         self.wid_tas = QWidget()
         self.wid_tas.setLayout(self.layout_tas)
 
-        # # initialize game
-        # self.board = gm.Board()
-        # self.team = gm.Team()
-        #
-        # # initialize player 1
-        # self.team.add_player(gm.Player('Celine'))
-        # self.team.add_player(gm.Player('Simon'))
-        # self.team.add_player(gm.Player('Loris'))
-        # self.team.init_hands(self.board)
-
         # Ordre ['r','b','y','g','w']
         self.tas_labels = {'r': QLabel("r0"), 'b': QLabel("b0"), 'y': QLabel("y0"), 'g': QLabel("g0"), 'w': QLabel("w0")}
 
@@ -124,7 +114,6 @@ class Fenetre(QWidget):
         message = socket.recv()
         game_dic = json.loads(message)
         self.team = gm.Team(game_dic['team'])
-        print(self.team.to_dic())
         self.board = gm.Board(game_dic['board'])
 
 

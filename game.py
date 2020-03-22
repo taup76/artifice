@@ -183,11 +183,10 @@ class Player:
 
 class Team:
     def __init__(self, dic=None):
-        print(dic)
         if dic is None:
             self.player_dic = {}
         else:
-            self.player_dic ={}
+            self.player_dic = {}
             self.from_dic(dic)
 
     def add_player(self, player):
@@ -209,4 +208,4 @@ class Team:
 
     def from_dic(self, dic):
         for key in dic.keys():
-            self.player_dic[key] = Player(dic[key])
+            self.player_dic[key] = Player(key, dic[key])
