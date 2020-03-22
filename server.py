@@ -1,6 +1,5 @@
 import random
 
-
 class Card:
     def __init__(self, color, value):
         self.color = color
@@ -86,6 +85,8 @@ def main():
     my_player2.init_hand(myBoard, 4)
     print(my_player2.name)
     print(my_player2.card_list[2].to_string())
+
+    # Initialisation de la GUI
 
 if __name__ == "__main__":
     # execute only if run as a script

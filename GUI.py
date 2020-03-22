@@ -14,22 +14,24 @@ class Fenetre(QWidget):
         wid_tas = QWidget()
         wid_tas.setLayout(layout_tas)
 
+        board = srv.Board()
+        board.init_draw()
         top_blanc = 0
-        label_blanc = QLabel("Blanc :" + str(top_blanc))
+        self.label_blanc = QLabel("Blanc :" + str(top_blanc))
         top_bleu = 0
-        label_bleu = QLabel("Bleu :" + str(top_bleu))
+        self.label_bleu = QLabel("Bleu :" + str(top_bleu))
         top_vert = 0
-        label_vert = QLabel("Vert :" + str(top_vert))
+        self.label_vert = QLabel("Vert :" + str(top_vert))
         top_rouge = 0
-        label_rouge = QLabel("Rouge :" + str(top_rouge))
+        self.label_rouge = QLabel("Rouge :" + str(top_rouge))
         top_jaune = 0
-        label_jaune = QLabel("Jaune :" + str(top_jaune))
+        self.label_jaune = QLabel("Jaune :" + str(top_jaune))
 
-        layout_tas.addWidget(label_blanc,1,1)
-        layout_tas.addWidget(label_bleu,1,2)
-        layout_tas.addWidget(label_vert,1,3)
-        layout_tas.addWidget(label_rouge,2,1)
-        layout_tas.addWidget(label_jaune,2,2)
+        layout_tas.addWidget(self.label_blanc,1,1)
+        layout_tas.addWidget(self.label_bleu,1,2)
+        layout_tas.addWidget(self.label_vert,1,3)
+        layout_tas.addWidget(self.label_rouge,2,1)
+        layout_tas.addWidget(self.label_jaune,2,2)
 
         # On affiche les indices et les bombes erreurs
         wid_clue_miss = QWidget()
@@ -78,6 +80,13 @@ class Fenetre(QWidget):
             layout_card.addWidget(wid_carte)
         return wid_hand
 
+    def draw_game(self):
+        self.draw_board()
+        return 1
+
+    def draw_board(self, board):
+        self.label_blanc = board['w']
+
 # Définition de la classe Qcarte ---------------------------
 class QCarte(QPushButton):
     # Classe graphique pour representer une carte
@@ -90,9 +99,29 @@ class QCarte(QPushButton):
         self.setIconSize(pixmap.rect().size())
         self.carte = carte
         self.image = path_to_im
+        self.selected = False
+        self.clicked.connect(self.on_click)
 
     def __str__(self):
         return self.carte
+
+    def on_click(self):
+        print(self.selected)
+        if self.selected:
+            path_to_im = "images/" + self.carte.to_string()
+            pixmap = QPixmap(path_to_im)
+            ButtonIcon = QIcon(pixmap)
+            self.setIcon(ButtonIcon)
+            self.selected = False
+            print("cliqué")
+        else:
+            path_to_im = "images/small/" + self.carte.to_string()
+            pixmap = QPixmap(path_to_im)
+            ButtonIcon = QIcon(pixmap)
+            self.setIcon(ButtonIcon)
+            self.selected = True
+            print("non cliqué")
+
 
 
 app = QApplication.instance()
