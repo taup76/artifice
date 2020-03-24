@@ -3,6 +3,24 @@ import time
 import json
 from game import Board, Player, Team
 
+def parse_msg(msg):
+    command = msg["command"]
+    if command == 'join_game':
+        print('TODO: join game')
+        # get name and create new player
+    elif command == 'start_game':
+        print('TODO: start game')
+        # start only once
+        # initialize player's hands
+    elif command == 'stop_game':
+        print('TODO: stop game')
+    elif command == 'draw_card':
+        print('TODO: play card')
+    elif command == 'give_clue':
+        print('TODO: give a clue')
+    elif command == 'discard_card':
+        print('TODO: discard a card')
+
 def main():
     # initialize game
     main_board = Board()
@@ -35,18 +53,6 @@ def main():
         #  Send reply back to client
         socket.send_string(json_str)
 
-
-    myBoard = Board()
-
-    my_player1 = Player('Celine')
-    my_player2 = Player('Simon')
-    my_player1.init_hand(myBoard, 4)
-    my_player2.init_hand(myBoard, 4)
-    for i in range(4):
-        my_player2.play_card(myBoard, 0)
-    print(my_player1.to_string())
-    print(my_player2.to_string())
-    print(myBoard.to_string())
 
 if __name__ == "__main__":
     # execute only if run as a script
