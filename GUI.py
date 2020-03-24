@@ -5,6 +5,9 @@ import server as srv
 import game as gm
 import zmq, json
 
+# non blocking subcriber
+# https://stackoverflow.com/questions/26012132/zero-mq-socket-recv-call-is-blocking
+
 class Fenetre(QWidget):
     def __init__(self):
         QWidget.__init__(self)

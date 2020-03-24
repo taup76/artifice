@@ -181,6 +181,7 @@ class Player:
         self.discard_list.append(card)
         board.add_clue()
 
+
 class Team:
     def __init__(self, dic=None):
         if dic is None:
