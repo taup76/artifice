@@ -29,6 +29,12 @@ class Stack:
             self.card_list = []
             self.from_array(array)
 
+    def to_string(self):
+        str_cards = "Stack : "
+        for card in self.card_list:
+            str_cards += card.to_string() + " "
+        return str_cards
+
     def append(self, card):
         self.card_list.append(card)
 

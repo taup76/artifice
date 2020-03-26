@@ -1,8 +1,11 @@
 import sys
 from PyQt5.QtWidgets import QApplication, QWidget, QPushButton, QGridLayout, QFormLayout, QLabel, QLineEdit, QHBoxLayout, QVBoxLayout
 from PyQt5.QtGui import *
+from PyQt5.Qt import *
+from PyQt5.QtCore import QObject,pyqtSignal
 import server as srv
 import game as gm
+import  client
 import zmq, json
 
 # non blocking subcriber
@@ -12,13 +15,23 @@ class Fenetre(QWidget):
     def __init__(self):
         QWidget.__init__(self)
 
+        self.board = gm.Board()
+        self.team = gm.Team()
+
         self.layout_principal = QGridLayout()
         self.layout_tas = QGridLayout()
+        # On affiche les boutons pour créer ou rejoindre la partie
+        self.wid_buts_play = QWidget()
+        self.layout_buts_play = QHBoxLayout()
+        self.wid_buts_play.setLayout(self.layout_buts_play)
+        self.but_new = QPushButton("Nouvelle partie")
+        self.but_new.clicked.connect(self.open_popup_new_game)
+        # self.popup_new_game = None
 
-        # On affiche le bouton pour rejoindre la partie
         self.but_join = QPushButton("Rejoindre")
-        self.join_game()
-        # self.but_join.clicked.connect(self.join_game)
+        self.layout_buts_play.addWidget(self.but_new)
+        self.layout_buts_play.addWidget(self.but_join)
+        # self.join_game()
 
         # On affiche les tas de cartes
         self.wid_tas = QWidget()
@@ -54,17 +67,18 @@ class Fenetre(QWidget):
         # On affiche les mains des joueurs
         # self.list_player = ["Céline", "Simon"]
         self.list_player = self.team.player_dic.keys()
-        self.wid_hands = QWidget()
-        self.layout_hands = QVBoxLayout()
-        self.wid_hands.setLayout(self.layout_hands)
-
-        for joueur in self.list_player:
-            cartes_joueur = self.team.player_dic[joueur].card_list
-            wid_main = self.hand_wid(joueur, cartes_joueur)
-            self.layout_hands.addWidget(wid_main)
+        self.wid_hands = Widget_hands()
+        # self.wid_hands = QWidget()
+        # self.layout_hands = QVBoxLayout()
+        # self.wid_hands.setLayout(self.layout_hands)
+        #
+        # for joueur in self.list_player:
+        #     cartes_joueur = self.team.player_dic[joueur].card_list
+        #     wid_main = self.hand_wid(joueur, cartes_joueur)
+        #     self.layout_hands.addWidget(wid_main)
 
         # On remplit le layout principal
-        self.layout_principal.addWidget(self.but_join,1,1)
+        self.layout_principal.addWidget(self.wid_buts_play,1,1)
         self.layout_principal.addWidget(self.wid_tas,2,1)
         self.layout_principal.addWidget(self.wid_clue_miss,3,1)
         self.layout_principal.addWidget(self.wid_actions,4,1)
@@ -72,39 +86,22 @@ class Fenetre(QWidget):
         self.setLayout(self.layout_principal)
         self.setWindowTitle("Artifice")
 
-    def hand_wid(self,joueur,stack_carte):
-        wid_hand = QWidget()
-        layout_hand = QVBoxLayout()
-        wid_hand.setLayout(layout_hand)
-        layout_card = QHBoxLayout()
-        layout_hand.addWidget(QLabel(joueur))
-        wid_cards = QWidget()
-        layout_hand.addWidget(wid_cards)
-        wid_cards.setLayout(layout_card)
-        for carte in stack_carte.card_list:
-            path_to_im = "images/" + carte.to_string()
-            wid_carte = QCarte(carte)
-            layout_card.addWidget(wid_carte)
-        return wid_hand
-
     def draw_game(self):
+        print("draw 1")
         self.draw_board()
-        self.draw_all_hands()
+        print("draw 2")
+        # self.draw_all_hands()
+        print("draw 3")
+        # self.show()
 
     def draw_board(self):
         for key in self.board.stack_dic.keys():
-            print(self.board.to_string())
+            print(self.board.stack_dic[key].to_string())
+            print(self.board.stack_dic[key].get_length())
             if self.board.stack_dic[key].get_length() > 0:
                 self.tas_labels[key].setText(self.board.stack_dic[key][-1].to_string())
             else:
-                self.tas_labels[key].setText("0")
-
-    def draw_hand(self, joueur):
-        print("TODO")
-
-    def draw_all_hands(self):
-        for joueur in self.list_player:
-            self.draw_hand(self, joueur)
+                self.tas_labels = {'r': QLabel("r0"), 'b': QLabel("b0"), 'y': QLabel("y0"), 'g': QLabel("g0"), 'w': QLabel("w0")}
 
     def join_game(self):
         context = zmq.Context()
@@ -119,39 +116,121 @@ class Fenetre(QWidget):
         self.team = gm.Team(game_dic['team'])
         self.board = gm.Board(game_dic['board'])
 
+    def open_popup_new_game(self):
+        self.popup_new_game = Popup_New()
+        self.popup_new_game.but_ok.clicked.connect(self.handle_ok_new_game)
+        self.popup_new_game.show()
+
+    def handle_ok_new_game(self):
+        self.username = self.popup_new_game.field_joueur.text()
+        print("Nom du joueur : " + self.username)
+        self.client = client.Client(self.username)
+        dic_cmd = {'command':'start_game', 'player': self.username}
+        print(dic_cmd)
+        self.client.connect_socket()
+        message_new_game = self.client.make_message(dic_cmd)
+        self.board = gm.Board(message_new_game['board'])
+        self.team = gm.Team(message_new_game['team'])
+        print(self.board.to_dic())
+        print("Team init : ")
+        print(self.team.to_dic())
+        self.draw_game()
+        self.popup_new_game.close()
+        self.wid_hands.add_team(self.team, self.username)
+        print("Initialisation du jeu OK")
+
 
 # Définition de la classe Qcarte ---------------------------
 class QCarte(QPushButton):
     # Classe graphique pour representer une carte
-    def __init__(self, carte):
+    def __init__(self, carte, hidden=False):
         QPushButton.__init__(self)
-        path_to_im = "images/" + carte.to_string()
+        self.hidden = hidden
+        if self.hidden:
+            path_to_im = "images/hidden.png"
+        else:
+            path_to_im = "images/" + carte.to_string()
         pixmap = QPixmap(path_to_im)
         ButtonIcon = QIcon(pixmap)
         self.setIcon(ButtonIcon)
         self.setIconSize(pixmap.rect().size())
         self.carte = carte
-        self.image = path_to_im
         self.selected = False
         self.clicked.connect(self.on_click)
+        self.image = path_to_im
 
     def __str__(self):
         return self.carte
 
     def on_click(self):
         if self.selected:
-            path_to_im = "images/" + self.carte.to_string()
-            pixmap = QPixmap(path_to_im)
-            ButtonIcon = QIcon(pixmap)
-            self.setIcon(ButtonIcon)
+            if self.hidden:
+                path_to_im = "images/hidden"
+            else:
+                path_to_im = "images/" + self.carte.to_string()
             self.selected = False
         else:
-            path_to_im = "images/small/" + self.carte.to_string()
-            pixmap = QPixmap(path_to_im)
-            ButtonIcon = QIcon(pixmap)
-            self.setIcon(ButtonIcon)
+            if self.hidden:
+                path_to_im = "images/small/hidden"
+            else:
+                path_to_im = "images/small/" + self.carte.to_string()
             self.selected = True
+        pixmap = QPixmap(path_to_im)
+        ButtonIcon = QIcon(pixmap)
+        self.setIcon(ButtonIcon)
 
+class Popup_New(QWidget):
+    trigger = pyqtSignal()
+
+    def __init__(self):
+        QWidget.__init__(self)
+        self.layout_top = QVBoxLayout()
+        self.setLayout(self.layout_top)
+        self.label_setjoueur = QLabel("Nom du joueur")
+        self.layout_top.addWidget(self.label_setjoueur)
+        self.field_joueur = QLineEdit("")
+        self.layout_top.addWidget(self.field_joueur)
+        self.but_ok = QPushButton("OK")
+        self.layout_top.addWidget(self.but_ok)
+        self.show()
+
+class Widget_hands(QWidget):
+    def __init__(self, user = ""):
+        QWidget.__init__(self)
+        self.layout_hands = QHBoxLayout()
+        self.setLayout(self.layout_hands)
+        self.username = user
+
+    def add_hand(self, player):
+        wid_hand = QWidget()
+        layout_hand = QVBoxLayout()
+        wid_hand.setLayout(layout_hand)
+        layout_card = QHBoxLayout()
+        print("add 1")
+        layout_hand.addWidget(QLabel(player.name))
+        wid_cards = QWidget()
+        layout_hand.addWidget(wid_cards)
+        wid_cards.setLayout(layout_card)
+        for carte in player.card_list.card_list:
+            print(carte.to_string())
+            print(self.username + " //// " + player.name)
+            wid_carte = QCarte(carte, self.username == player.name)
+            layout_card.addWidget(wid_carte)
+        self.layout_hands.addWidget(wid_cards)
+
+    def add_team(self, team, user):
+        self.username = user
+        # self.clear_hands()
+        print(self.username)
+        print(team.player_dic)
+        for player_name in team.player_dic.keys():
+            print("okokok")
+            # print("Ajout " + team.player_dic[player_name])
+            self.add_hand(team.player_dic[player_name])
+
+    def clear_hands(self):
+        for i in reversed(range(self.layout_hands.count())):
+            self.layout_hands.itemAt(i).widget().setParent(None)
 
 app = QApplication.instance()
 if not app:
