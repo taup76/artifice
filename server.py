@@ -38,20 +38,6 @@ def parse_msg(msg):
     return json_str
 
 def main():
-    # initialize game
-    # main_board = Board()
-    # main_team = Team()
-
-    # initialize player 1
-    # main_team.add_player(Player('Celine'))
-    # main_team.add_player(Player('Simon'))
-    # main_team.add_player(Player('Loris'))
-    # main_team.init_hands(main_board)
-    #
-    # print(main_board.to_dic())
-    # print(main_team.to_dic())
-
-    # json_str = json.dumps({"board": main_board.to_dic(), "team": main_team.to_dic()})
 
     context = zmq.Context()
     socket = context.socket(zmq.REP)
@@ -63,7 +49,7 @@ def main():
         print("Received request: %s" % message)
 
         #  Do some 'work'
-        time.sleep(1)
+        time.sleep(0.1)
         json_str = parse_msg(message)
 
         print(json_str)

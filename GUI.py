@@ -138,6 +138,10 @@ class Fenetre(QWidget):
         self.popup_new_game.close()
         self.wid_hands.add_team(self.team, self.username)
         print("Initialisation du jeu OK")
+        self.but_play.clicked.connect(self.on_but_play_clicked)
+
+    def on_but_play_clicked(self):
+        print "clicked"
 
 
 # Définition de la classe Qcarte ---------------------------
