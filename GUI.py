@@ -19,7 +19,6 @@ class Fenetre(QWidget):
         self.team = gm.Team()
 
         self.layout_principal = QGridLayout()
-        self.layout_tas = QGridLayout()
         # On affiche les boutons pour créer ou rejoindre la partie
         self.wid_buts_play = QWidget()
         self.layout_buts_play = QHBoxLayout()
@@ -34,26 +33,18 @@ class Fenetre(QWidget):
         # self.join_game()
 
         # On affiche les tas de cartes
-        self.wid_tas = QWidget()
-        self.wid_tas.setLayout(self.layout_tas)
+        self.wid_board = Widget_board()
+        self.wid_board.add_board(self.board)
 
         # Ordre ['r','b','y','g','w']
         self.tas_labels = {'r': QLabel("r0"), 'b': QLabel("b0"), 'y': QLabel("y0"), 'g': QLabel("g0"), 'w': QLabel("w0")}
+        self.draw_board()
+        # self.layout_tas.addWidget(self.tas_labels['r'],1,1)
+        # self.layout_tas.addWidget(self.tas_labels['b'],1,2)
+        # self.layout_tas.addWidget(self.tas_labels['y'],1,3)
+        # self.layout_tas.addWidget(self.tas_labels['g'],2,1)
+        # self.layout_tas.addWidget(self.tas_labels['w'],2,2)
 
-        self.layout_tas.addWidget(self.tas_labels['r'],1,1)
-        self.layout_tas.addWidget(self.tas_labels['b'],1,2)
-        self.layout_tas.addWidget(self.tas_labels['y'],1,3)
-        self.layout_tas.addWidget(self.tas_labels['g'],2,1)
-        self.layout_tas.addWidget(self.tas_labels['w'],2,2)
-
-        # On affiche les indices et les bombes erreurs
-        self.wid_clue_miss = QWidget()
-        self.layout_clue = QHBoxLayout()
-        self.wid_clue_miss.setLayout(self.layout_clue)
-        self.label_clue = QLabel("Indice :" + str(self.board.clues))
-        self.label_miss = QLabel("Erreurs :" + str(self.board.miss))
-        self.layout_clue.addWidget(self.label_clue)
-        self.layout_clue.addWidget(self.label_miss)
 
         # On affiche les boutons pour jouer ou défausser les cartes sélectionnées
         self.wid_actions = QWidget()
@@ -79,9 +70,9 @@ class Fenetre(QWidget):
 
         # On remplit le layout principal
         self.layout_principal.addWidget(self.wid_buts_play,1,1)
-        self.layout_principal.addWidget(self.wid_tas,2,1)
-        self.layout_principal.addWidget(self.wid_clue_miss,3,1)
-        self.layout_principal.addWidget(self.wid_actions,4,1)
+        self.layout_principal.addWidget(self.wid_board,2,1)
+        # self.layout_principal.addWidget(self.wid_clue_miss,3,1)
+        # self.layout_principal.addWidget(self.wid_actions,4,1)
         self.layout_principal.addWidget(self.wid_hands,2,2)
         self.setLayout(self.layout_principal)
         self.setWindowTitle("Artifice")
@@ -126,16 +117,13 @@ class Fenetre(QWidget):
         print("Nom du joueur : " + self.username)
         self.client = client.Client(self.username)
         dic_cmd = {'command':'start_game', 'player': self.username}
-        print(dic_cmd)
         self.client.connect_socket()
         message_new_game = self.client.make_message(dic_cmd)
         self.board = gm.Board(message_new_game['board'])
         self.team = gm.Team(message_new_game['team'])
-        print(self.board.to_dic())
-        print("Team init : ")
-        print(self.team.to_dic())
         self.draw_game()
         self.popup_new_game.close()
+        self.wid_hands.clear_hands()
         self.wid_hands.add_team(self.team, self.username)
         print("Initialisation du jeu OK")
         self.but_play.clicked.connect(self.on_but_play_clicked)
@@ -147,18 +135,19 @@ class Fenetre(QWidget):
 # Définition de la classe Qcarte ---------------------------
 class QCarte(QPushButton):
     # Classe graphique pour representer une carte
-    def __init__(self, carte, hidden=False):
+    def __init__(self, carte=None, hidden=False):
         QPushButton.__init__(self)
         self.hidden = hidden
-        if self.hidden:
-            path_to_im = "images/hidden.png"
+        if carte is None:
+            path_to_im = 'images/naught_b.png'
         else:
-            path_to_im = "images/" + carte.to_string()
-        pixmap = QPixmap(path_to_im)
-        ButtonIcon = QIcon(pixmap)
-        self.setIcon(ButtonIcon)
-        self.setIconSize(pixmap.rect().size())
+            if self.hidden:
+                path_to_im = "images/hidden.png"
+            else:
+                path_to_im = "images/" + carte.to_string()
+        self.set_image(path_to_im)
         self.carte = carte
+        self.isclickable = (carte is not None)
         self.selected = False
         self.clicked.connect(self.on_click)
         self.image = path_to_im
@@ -166,22 +155,30 @@ class QCarte(QPushButton):
     def __str__(self):
         return self.carte
 
-    def on_click(self):
-        if self.selected:
-            if self.hidden:
-                path_to_im = "images/hidden"
-            else:
-                path_to_im = "images/" + self.carte.to_string()
-            self.selected = False
-        else:
-            if self.hidden:
-                path_to_im = "images/small/hidden"
-            else:
-                path_to_im = "images/small/" + self.carte.to_string()
-            self.selected = True
-        pixmap = QPixmap(path_to_im)
+    def set_image(self, path):
+        pixmap = QPixmap(path)
         ButtonIcon = QIcon(pixmap)
         self.setIcon(ButtonIcon)
+        self.setIconSize(pixmap.rect().size())
+
+
+    def on_click(self):
+        if self.isclickable:
+            if self.selected:
+                if self.hidden:
+                    path_to_im = "images/hidden"
+                else:
+                    path_to_im = "images/" + self.carte.to_string()
+                self.selected = False
+            else:
+                if self.hidden:
+                    path_to_im = "images/small/hidden"
+                else:
+                    path_to_im = "images/small/" + self.carte.to_string()
+                self.selected = True
+            pixmap = QPixmap(path_to_im)
+            ButtonIcon = QIcon(pixmap)
+            self.setIcon(ButtonIcon)
 
 class Popup_New(QWidget):
     trigger = pyqtSignal()
@@ -210,31 +207,73 @@ class Widget_hands(QWidget):
         layout_hand = QVBoxLayout()
         wid_hand.setLayout(layout_hand)
         layout_card = QHBoxLayout()
-        print("add 1")
-        layout_hand.addWidget(QLabel(player.name))
+        wid_name = QLabel(player.name)
+        layout_hand.addWidget(wid_name)
         wid_cards = QWidget()
         layout_hand.addWidget(wid_cards)
         wid_cards.setLayout(layout_card)
         for carte in player.card_list.card_list:
-            print(carte.to_string())
-            print(self.username + " //// " + player.name)
             wid_carte = QCarte(carte, self.username == player.name)
             layout_card.addWidget(wid_carte)
-        self.layout_hands.addWidget(wid_cards)
+        self.layout_hands.addWidget(wid_hand)
 
     def add_team(self, team, user):
         self.username = user
         # self.clear_hands()
-        print(self.username)
-        print(team.player_dic)
         for player_name in team.player_dic.keys():
-            print("okokok")
-            # print("Ajout " + team.player_dic[player_name])
             self.add_hand(team.player_dic[player_name])
 
     def clear_hands(self):
         for i in reversed(range(self.layout_hands.count())):
             self.layout_hands.itemAt(i).widget().setParent(None)
+
+class Widget_board(QWidget):
+    def __init__(self):
+        QWidget.__init__(self)
+        # On affiche les tas à remplir
+        self.layout_board = QVBoxLayout()
+        self.setLayout(self.layout_board)
+        self.layout_tas = QHBoxLayout()
+        self.wid_tas = QWidget()
+        self.wid_tas.setLayout(self.layout_tas)
+        self.layout_board.addWidget(self.wid_tas)
+
+        # On affiche les indices et les bombes erreurs
+        self.wid_clue_miss = QWidget()
+        self.layout_clue = QHBoxLayout()
+        self.wid_clue_miss.setLayout(self.layout_clue)
+        self.label_clue = QLabel("Indice :" + str(0))
+        self.label_miss = QLabel("Erreurs :" + str(0))
+        self.layout_clue.addWidget(self.label_clue)
+        self.layout_clue.addWidget(self.label_miss)
+        self.layout_board.addWidget(self.wid_clue_miss)
+
+    def add_board(self, board):
+        self.clear_board()
+        for stack_key in board.stack_dic.keys():
+            stack = board.stack_dic[stack_key]
+            if len(stack.card_list) > 0:
+                carte_top = stack.card_list[-1]
+                path = "images/" + carte_top.couleur + carte_top.valeur
+                wid_carte = QCarte(carte_top)
+            else:
+                path = "images/naught_" + stack_key
+                wid_carte = QCarte()
+            wid_carte.set_image(path)
+            self.layout_tas.addWidget(wid_carte)
+        # On update les miss et les clues
+        print("NB de clues : " + str(board.clues))
+        self.label_clue = QLabel("Indices :" + str(board.clues))
+        self.label_miss = QLabel("Erreurs :" + str(board.miss))
+        self.layout_clue.addWidget(self.label_clue)
+        self.layout_clue.addWidget(self.label_miss)
+
+    def clear_board(self):
+        for i in reversed(range(self.layout_tas.count())):
+            self.layout_tas.itemAt(i).widget().setParent(None)
+        self.layout_clue.itemAt(1).widget().setParent(None)
+        self.layout_clue.itemAt(0).widget().setParent(None)
+
 
 app = QApplication.instance()
 if not app:
