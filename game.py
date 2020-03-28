@@ -264,11 +264,45 @@ class Game:
         self.board = None
         return ""
 
-    def play_card(self, username, card_idx):
+    def get_player_and_card_idx(self, player_dic):
+        error_msg = ""
+        current_player = Player()
+        # create player from received message
+        rcvd_player = Player(player_dic)
+
+        # look for selected index
+        selected_card_idx = -1
+        card_list = currentPlayer.card_list.card_list
+        for i in range(len(card_list)):
+            if card_list[i].selected:
+                selected_card_idx = i
+                break
+        if selected_card_idx < 0:
+            error_msg = "No card selected"
+
+        if rcvd_player.name not in self.team.player_dic:
+            error_msg = "Player not in game"
+        else:
+            current_player = self.team.player_dic[rcvd_player.name]
+
+        return current_player, selected_card_idx, error_msg
+
+    def play_card(self, player_dic):
+        current_player, selected_card_idx, error_str = self.get_player_and_card_idx(player_dic)
+        if len(error_str) > 0:
+            return error_str
+
+        current_player.play_card(self.board, selected_card_idx)
+
         return ""
 
     def give_clue(self, username, card_idx_list):
         return ""
 
-    def discard_card(self, username, card_idx):
+    def discard_card(self, player_dic):
+        current_player, selected_card_idx, error_str = self.get_player_and_card_idx(player_dic)
+        if len(error_str) > 0:
+            return error_str
+        current_player.discard_card(self.board, selected_card_idx)
+
         return ""
