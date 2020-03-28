@@ -142,7 +142,7 @@ class Board:
 
 class Player:
 
-    def __init__(self, name, dic=None):
+    def __init__(self, name=None, dic=None):
         if dic is None:
             self.name = name
             self.card_list = Stack()
@@ -266,13 +266,13 @@ class Game:
 
     def get_player_and_card_idx(self, player_dic):
         error_msg = ""
-        current_player = Player()
+        current_player = Player("")
         # create player from received message
-        rcvd_player = Player(player_dic)
+        rcvd_player = Player(dic=player_dic)
 
         # look for selected index
         selected_card_idx = -1
-        card_list = currentPlayer.card_list.card_list
+        card_list = current_player.card_list.card_list
         for i in range(len(card_list)):
             if card_list[i].selected:
                 selected_card_idx = i
@@ -280,7 +280,7 @@ class Game:
         if selected_card_idx < 0:
             error_msg = "No card selected"
 
-        if rcvd_player.name not in self.team.player_dic:
+        if rcvd_player.name not in self.team.player_dic.keys():
             error_msg = "Player not in game"
         else:
             current_player = self.team.player_dic[rcvd_player.name]

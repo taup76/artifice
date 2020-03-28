@@ -112,10 +112,7 @@ class Fenetre(QWidget):
         self.client = client.Client(self.username)
         dic_cmd = {'command':'join_game', 'username': self.username}
         message_new_game = self.client.make_message(dic_cmd)
-        print("Message recu ")
-        print(message_new_game)
         self.board = gm.Board(message_new_game['board'])
-        print(self.board.to_dic())
         self.team = gm.Team(message_new_game['team'])
         self.draw_game()
         # self.draw_board()
@@ -127,8 +124,8 @@ class Fenetre(QWidget):
 
     def handle_dismiss(self):
         dic_cmd = {'command': 'discard_card', 'player': self.team.player_dic[self.username].to_dic()}
-        message_dismiss = self.client.make_message(dic_cmd)
-        game_dic = json.loads(message_dismiss)
+        game_dic = self.client.make_message(dic_cmd)
+        # game_dic = json.loads(message_dismiss)
         self.team = gm.Team(game_dic['team'])
         self.board = gm.Board(game_dic['board'])
         self.draw_game()
