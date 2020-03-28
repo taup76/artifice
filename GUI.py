@@ -17,20 +17,24 @@ class Fenetre(QWidget):
 
         self.board = gm.Board()
         self.team = gm.Team()
+        self.username = ""
+
+        # On affiche les mains des joueurs
+        self.list_player = self.team.player_dic.keys()
+        self.wid_hands = Widget_hands()
 
         self.layout_principal = QGridLayout()
         # On affiche les boutons pour créer ou rejoindre la partie
         self.wid_buts_play = QWidget()
         self.layout_buts_play = QHBoxLayout()
         self.wid_buts_play.setLayout(self.layout_buts_play)
-        self.but_new = QPushButton("Nouvelle partie")
-        self.but_new.clicked.connect(self.open_popup_new_game)
-        # self.popup_new_game = None
+        self.but_join = QPushButton("Rejoindre le serveur")
+        self.but_join.clicked.connect(self.open_popup_join)
 
-        self.but_join = QPushButton("Rejoindre")
-        self.layout_buts_play.addWidget(self.but_new)
+        self.but_launch = QPushButton("Démarrer la partie")
+        # self.but_launch.clicked.connect(self.handle_launch())
         self.layout_buts_play.addWidget(self.but_join)
-        # self.join_game()
+        self.layout_buts_play.addWidget(self.but_launch)
 
         # On affiche les tas de cartes
         self.wid_board = Widget_board()
@@ -39,40 +43,25 @@ class Fenetre(QWidget):
         # Ordre ['r','b','y','g','w']
         self.tas_labels = {'r': QLabel("r0"), 'b': QLabel("b0"), 'y': QLabel("y0"), 'g': QLabel("g0"), 'w': QLabel("w0")}
         self.draw_board()
-        # self.layout_tas.addWidget(self.tas_labels['r'],1,1)
-        # self.layout_tas.addWidget(self.tas_labels['b'],1,2)
-        # self.layout_tas.addWidget(self.tas_labels['y'],1,3)
-        # self.layout_tas.addWidget(self.tas_labels['g'],2,1)
-        # self.layout_tas.addWidget(self.tas_labels['w'],2,2)
 
 
         # On affiche les boutons pour jouer ou défausser les cartes sélectionnées
         self.wid_actions = QWidget()
         self.but_play = QPushButton("Jouer")
+        self.but_play.clicked.connect(self.handle_but_play())
         self.but_dismiss = QPushButton("Défausser")
+        self.but_dismiss.clicked.connect(self.handle_dismiss())
         self.layout_actions = QHBoxLayout()
         self.wid_actions.setLayout(self.layout_actions)
         self.layout_actions.addWidget(self.but_play)
         self.layout_actions.addWidget(self.but_dismiss)
 
-        # On affiche les mains des joueurs
-        # self.list_player = ["Céline", "Simon"]
-        self.list_player = self.team.player_dic.keys()
-        self.wid_hands = Widget_hands()
-        # self.wid_hands = QWidget()
-        # self.layout_hands = QVBoxLayout()
-        # self.wid_hands.setLayout(self.layout_hands)
-        #
-        # for joueur in self.list_player:
-        #     cartes_joueur = self.team.player_dic[joueur].card_list
-        #     wid_main = self.hand_wid(joueur, cartes_joueur)
-        #     self.layout_hands.addWidget(wid_main)
 
         # On remplit le layout principal
         self.layout_principal.addWidget(self.wid_buts_play,1,1)
         self.layout_principal.addWidget(self.wid_board,2,1)
         # self.layout_principal.addWidget(self.wid_clue_miss,3,1)
-        # self.layout_principal.addWidget(self.wid_actions,4,1)
+        self.layout_principal.addWidget(self.wid_actions,4,1)
         self.layout_principal.addWidget(self.wid_hands,2,2)
         self.setLayout(self.layout_principal)
         self.setWindowTitle("Artifice")
@@ -95,37 +84,75 @@ class Fenetre(QWidget):
                 self.tas_labels = {'r': QLabel("r0"), 'b': QLabel("b0"), 'y': QLabel("y0"), 'g': QLabel("g0"), 'w': QLabel("w0")}
 
     def join_game(self):
-        context = zmq.Context()
-        #  Socket to talk to server
-        print("Connecting to hello world server…")
-        socket = context.socket(zmq.REQ)
-        socket.connect("tcp://localhost:5555")
-        socket.send(b"Hello")
+        # self.client.connect_socket()
+        # context = zmq.Context()
+        # #  Socket to talk to server
+        # print("Connecting to hello world server…")
+        # socket = context.socket(zmq.REQ)
+        # socket.connect("tcp://localhost:5555")
+        # socket.send(b"Hello")
         #  Get the reply.
-        message = socket.recv()
+        dic_cmd = {'username': self.username}
+        self.client.make_message(dic_cmd)
+        message = self.client.socket.recv()
         game_dic = json.loads(message)
         self.team = gm.Team(game_dic['team'])
         self.board = gm.Board(game_dic['board'])
 
-    def open_popup_new_game(self):
-        self.popup_new_game = Popup_New()
-        self.popup_new_game.but_ok.clicked.connect(self.handle_ok_new_game)
-        self.popup_new_game.show()
+    def open_popup_join(self):
+        self.popup_join = Popup_join()
+        self.popup_join.but_ok.clicked.connect(self.handle_ok_join)
+        self.popup_join.show()
 
-    def handle_ok_new_game(self):
-        self.username = self.popup_new_game.field_joueur.text()
-        print("Nom du joueur : " + self.username)
-        self.client = client.Client(self.username)
-        dic_cmd = {'command':'start_game', 'player': self.username}
-        self.client.connect_socket()
-        message_new_game = self.client.make_message(dic_cmd)
-        self.board = gm.Board(message_new_game['board'])
-        self.team = gm.Team(message_new_game['team'])
-        self.draw_game()
-        self.popup_new_game.close()
-        self.wid_hands.clear_hands()
+    def handle_launch(self):
         self.wid_hands.add_team(self.team, self.username)
         print("Initialisation du jeu OK")
+
+    def handle_ok_join(self):
+        self.username = self.popup_join.field_joueur.text()
+        print("Nom du joueur : " + self.username)
+        self.client = client.Client(self.username)
+        dic_cmd = {'command':'join_game', 'player': self.username}
+        # self.client.connect_socket()
+        message_new_game = self.client.make_message(dic_cmd)
+        print('join 1')
+        print(message_new_game)
+        self.board = gm.Board(message_new_game['board'])
+        self.team = gm.Team(message_new_game['team'])
+        print('join 2')
+        self.draw_game()
+        self.draw_board()
+        self.popup_join.close()
+        print('join 3')
+        self.wid_hands.clear_hands()
+
+    def handle_but_play(self):
+        self.remove_selected()
+        self.team.player_dic[self.username].draw_card()
+
+    def handle_dismiss(self):
+        dic_cmd = {'command': 'discard_card', 'player': self.team.player_dic[self.username]}
+        print('dismiss 0')
+        # self.client.connect_socket()
+        message_dismiss = self.client.make_message(dic_cmd)
+        print('dismiss 1')
+        print(message_dismiss)
+        message = self.client.socket.recv()
+        game_dic = json.loads(message)
+        self.team = gm.Team(game_dic['team'])
+        self.board = gm.Board(game_dic['board'])
+
+    # def remove_selected(self):
+    #     # hand = self.team.player_dic[self.username].card_list
+    #     # for carte in hand:
+    #     #     if carte.selected:
+    #     #         hand.pop(carte)
+    #     dic_cmd = {'command': 'discard_card', 'player': self.team.player_dic[self.username]}
+    #     self.client.connect_socket()
+    #     message_dismiss = self.client.make_message(dic_cmd)
+    #     print('dismiss 1')
+    #     print(message_dismiss)
+
 
 
 # Définition de la classe Qcarte ---------------------------
@@ -176,7 +203,7 @@ class QCarte(QPushButton):
             ButtonIcon = QIcon(pixmap)
             self.setIcon(ButtonIcon)
 
-class Popup_New(QWidget):
+class Popup_join(QWidget):
     trigger = pyqtSignal()
 
     def __init__(self):
