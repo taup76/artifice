@@ -244,7 +244,7 @@ class Game:
         if len(self.team.player_dic) >= 5:
             return "Cannot add any more player"
 
-        self.team.add_player(player_name)
+        self.team.add_player(Player(player_name))
         return ""
 
     def start_game(self):
