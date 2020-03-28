@@ -250,12 +250,25 @@ class Game:
     def start_game(self):
         if not self.is_init:
             return "Game is not initialized yet"
+        if self.is_started:
+            return "Game is already started"
         self.board.init_draw()
         self.team.init_hands()
         self.is_started = True
+        return ""
 
     def finish_game(self):
         self.is_init = False
         self.is_started = False
         self.team = None
         self.board = None
+        return ""
+
+    def play_card(self, username, card_idx):
+        return ""
+
+    def give_clue(self, username, card_idx_list):
+        return ""
+
+    def discard_card(self, username, card_idx):
+        return ""

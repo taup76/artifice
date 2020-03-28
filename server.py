@@ -12,14 +12,14 @@ def parse_msg(msg, game):
         result_msg = game.join_game(msg["username"])
     elif command == 'start_game':
         result_msg = game.start_game()
-    elif command == 'stop_game':
-        print('TODO: stop game')
-    elif command == 'draw_card':
-        print('TODO: play card')
+    elif command == 'finish_game':
+        result_msg = game.finish_game()
+    elif command == 'play_card':
+        result_msg = game.play_card(msg["username"], msg["card_idx"])
     elif command == 'give_clue':
-        print('TODO: give a clue')
+        result_msg = game.give_clue(msg["username"], msg["card_idx_list"])
     elif command == 'discard_card':
-        print('TODO: discard a card')
+        result_msg = game.discard_card(msg["username"], msg["card_idx"])
 
     game_dic = game.to_dic()
     game_dic["result"] = result_msg
