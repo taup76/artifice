@@ -14,6 +14,7 @@ class Client:
         self.ip = "localhost"
         self.port = 5555
         self.joueur = joueur
+        self.connect_socket()
 
     def __str__(self):
         # TODO
@@ -40,9 +41,10 @@ class Client:
             # mes_json = json.dumps(dic_command)
             self.socket.send_json(dic_command)
             self.message = self.socket.recv_json()
-            # print("Message recu :")
-            # print(self.message)
+            print("Message recu :")
+            print(self.message)
         else:
             print("Format inconnu de commande")
+
         return self.message
 

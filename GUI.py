@@ -17,20 +17,24 @@ class Fenetre(QWidget):
 
         self.board = gm.Board()
         self.team = gm.Team()
+        self.username = ""
+
+        # On affiche les mains des joueurs
+        self.list_player = self.team.player_dic.keys()
+        self.wid_hands = Widget_hands()
 
         self.layout_principal = QGridLayout()
-        # On affiche les boutons pour créer ou rejoindre la partie
+        # On affiche les boutons pour creer ou rejoindre la partie
         self.wid_buts_play = QWidget()
         self.layout_buts_play = QHBoxLayout()
         self.wid_buts_play.setLayout(self.layout_buts_play)
-        self.but_new = QPushButton("Nouvelle partie")
-        self.but_new.clicked.connect(self.open_popup_new_game)
-        # self.popup_new_game = None
+        self.but_join = QPushButton("Rejoindre le serveur")
+        self.but_join.clicked.connect(self.open_popup_join)
 
-        self.but_join = QPushButton("Rejoindre")
-        self.layout_buts_play.addWidget(self.but_new)
+        self.but_launch = QPushButton("Demarrer la partie")
+        self.but_launch.clicked.connect(self.handle_launch)
         self.layout_buts_play.addWidget(self.but_join)
-        # self.join_game()
+        self.layout_buts_play.addWidget(self.but_launch)
 
         # On affiche les tas de cartes
         self.wid_board = Widget_board()
@@ -38,101 +42,95 @@ class Fenetre(QWidget):
 
         # Ordre ['r','b','y','g','w']
         self.tas_labels = {'r': QLabel("r0"), 'b': QLabel("b0"), 'y': QLabel("y0"), 'g': QLabel("g0"), 'w': QLabel("w0")}
-        self.draw_board()
-        # self.layout_tas.addWidget(self.tas_labels['r'],1,1)
-        # self.layout_tas.addWidget(self.tas_labels['b'],1,2)
-        # self.layout_tas.addWidget(self.tas_labels['y'],1,3)
-        # self.layout_tas.addWidget(self.tas_labels['g'],2,1)
-        # self.layout_tas.addWidget(self.tas_labels['w'],2,2)
+        # self.draw_game()
 
 
-        # On affiche les boutons pour jouer ou défausser les cartes sélectionnées
+        # On affiche les boutons pour jouer ou defausser les cartes selectionnees
         self.wid_actions = QWidget()
         self.but_play = QPushButton("Jouer")
-        self.but_dismiss = QPushButton("Défausser")
+        self.but_play.clicked.connect(self.handle_but_play)
+        self.but_dismiss = QPushButton("Defausser")
+        self.but_dismiss.clicked.connect(self.handle_dismiss)
         self.layout_actions = QHBoxLayout()
         self.wid_actions.setLayout(self.layout_actions)
         self.layout_actions.addWidget(self.but_play)
         self.layout_actions.addWidget(self.but_dismiss)
 
-        # On affiche les mains des joueurs
-        # self.list_player = ["Céline", "Simon"]
-        self.list_player = self.team.player_dic.keys()
-        self.wid_hands = Widget_hands()
-        # self.wid_hands = QWidget()
-        # self.layout_hands = QVBoxLayout()
-        # self.wid_hands.setLayout(self.layout_hands)
-        #
-        # for joueur in self.list_player:
-        #     cartes_joueur = self.team.player_dic[joueur].card_list
-        #     wid_main = self.hand_wid(joueur, cartes_joueur)
-        #     self.layout_hands.addWidget(wid_main)
 
         # On remplit le layout principal
         self.layout_principal.addWidget(self.wid_buts_play,1,1)
         self.layout_principal.addWidget(self.wid_board,2,1)
         # self.layout_principal.addWidget(self.wid_clue_miss,3,1)
-        # self.layout_principal.addWidget(self.wid_actions,4,1)
+        self.layout_principal.addWidget(self.wid_actions,4,1)
         self.layout_principal.addWidget(self.wid_hands,2,2)
         self.setLayout(self.layout_principal)
         self.setWindowTitle("Artifice")
 
     def draw_game(self):
-        print("draw 1")
-        self.draw_board()
         print("draw 2")
-        # self.draw_all_hands()
-        print("draw 3")
-        # self.show()
+        self.wid_hands.add_team(self.team, self.username)
+        print("draw 4")
+        print(self.board.to_dic())
+        self.wid_board.add_board(self.board)
+        print("draw 5")
 
-    def draw_board(self):
-        for key in self.board.stack_dic.keys():
-            print(self.board.stack_dic[key].to_string())
-            print(self.board.stack_dic[key].get_length())
-            if self.board.stack_dic[key].get_length() > 0:
-                self.tas_labels[key].setText(self.board.stack_dic[key][-1].to_string())
-            else:
-                self.tas_labels = {'r': QLabel("r0"), 'b': QLabel("b0"), 'y': QLabel("y0"), 'g': QLabel("g0"), 'w': QLabel("w0")}
+    # def draw_board(self):
+    #     for key in self.board.stack_dic.keys():
+    #         if self.board.stack_dic[key].get_length() > 0:
+    #             self.tas_labels[key].setText(self.board.stack_dic[key][-1].to_string())
+    #         else:
+    #             self.tas_labels = {'r': QLabel("r0"), 'b': QLabel("b0"), 'y': QLabel("y0"), 'g': QLabel("g0"), 'w': QLabel("w0")}
 
     def join_game(self):
-        context = zmq.Context()
-        #  Socket to talk to server
-        print("Connecting to hello world server…")
-        socket = context.socket(zmq.REQ)
-        socket.connect("tcp://localhost:5555")
-        socket.send(b"Hello")
-        #  Get the reply.
-        message = socket.recv()
-        game_dic = json.loads(message)
+        dic_cmd = {'username': self.username}
+        message = self.client.make_message(dic_cmd)
+        # message = self.client.socket.recv()
+        # game_dic = json.loads(message)
+        self.team = gm.Team(message['team'])
+        self.board = gm.Board(message['board'])
+
+    def open_popup_join(self):
+        self.popup_join = Popup_join()
+        self.popup_join.but_ok.clicked.connect(self.handle_ok_join)
+        self.popup_join.show()
+
+    def handle_launch(self):
+        print('launch game 1')
+        dic_cmd = {'command':'start_game', 'username': self.username}
+        game_dic = self.client.make_message(dic_cmd)
+        print('launch game 2')
+        # game_dic = self.client.socket.recv_json()
+        print('launch game 3')
         self.team = gm.Team(game_dic['team'])
         self.board = gm.Board(game_dic['board'])
 
-    def open_popup_new_game(self):
-        self.popup_new_game = Popup_New()
-        self.popup_new_game.but_ok.clicked.connect(self.handle_ok_new_game)
-        self.popup_new_game.show()
+        self.wid_hands.add_team(self.team, self.username)
+        print("Initialisation du jeu OK")
 
-    def handle_ok_new_game(self):
-        self.username = self.popup_new_game.field_joueur.text()
-        print("Nom du joueur : " + self.username)
+    def handle_ok_join(self):
+        self.username = self.popup_join.field_joueur.text()
         self.client = client.Client(self.username)
-        dic_cmd = {'command':'start_game', 'player': self.username}
-        self.client.connect_socket()
+        dic_cmd = {'command':'join_game', 'username': self.username}
         message_new_game = self.client.make_message(dic_cmd)
         self.board = gm.Board(message_new_game['board'])
         self.team = gm.Team(message_new_game['team'])
         self.draw_game()
-        self.popup_new_game.close()
+        # self.draw_board()
+        self.popup_join.close()
         self.wid_hands.clear_hands()
-        self.wid_hands.add_team(self.team, self.username)
-        print("Initialisation du jeu OK")
-        self.but_play.clicked.connect(self.on_but_play_clicked)
 
-    def on_but_play_clicked(self):
-        print( "clicked")
+    def handle_but_play(self):
+        self.team.player_dic[self.username].draw_card()
 
+    def handle_dismiss(self):
+        dic_cmd = {'command': 'discard_card', 'player': self.team.player_dic[self.username].to_dic()}
+        game_dic = self.client.make_message(dic_cmd)
+        # game_dic = json.loads(message_dismiss)
+        self.team = gm.Team(game_dic['team'])
+        self.board = gm.Board(game_dic['board'])
+        self.draw_game()
 
-# Définition de la classe Qcarte ---------------------------
+# Definition de la classe Qcarte ---------------------------
 class QCarte(QPushButton):
     # Classe graphique pour representer une carte
     def __init__(self, carte=None, hidden=False):
@@ -161,7 +159,6 @@ class QCarte(QPushButton):
         self.setIcon(ButtonIcon)
         self.setIconSize(pixmap.rect().size())
 
-
     def on_click(self):
         if self.isclickable:
             if self.selected:
@@ -180,7 +177,7 @@ class QCarte(QPushButton):
             ButtonIcon = QIcon(pixmap)
             self.setIcon(ButtonIcon)
 
-class Popup_New(QWidget):
+class Popup_join(QWidget):
     trigger = pyqtSignal()
 
     def __init__(self):
@@ -198,7 +195,7 @@ class Popup_New(QWidget):
 class Widget_hands(QWidget):
     def __init__(self, user = ""):
         QWidget.__init__(self)
-        self.layout_hands = QHBoxLayout()
+        self.layout_hands = QVBoxLayout()
         self.setLayout(self.layout_hands)
         self.username = user
 
@@ -219,7 +216,7 @@ class Widget_hands(QWidget):
 
     def add_team(self, team, user):
         self.username = user
-        # self.clear_hands()
+        self.clear_hands()
         for player_name in team.player_dic.keys():
             self.add_hand(team.player_dic[player_name])
 
@@ -230,7 +227,7 @@ class Widget_hands(QWidget):
 class Widget_board(QWidget):
     def __init__(self):
         QWidget.__init__(self)
-        # On affiche les tas à remplir
+        # On affiche les tas a remplir
         self.layout_board = QVBoxLayout()
         self.setLayout(self.layout_board)
         self.layout_tas = QHBoxLayout()
@@ -249,20 +246,24 @@ class Widget_board(QWidget):
         self.layout_board.addWidget(self.wid_clue_miss)
 
     def add_board(self, board):
+        print("board 1")
         self.clear_board()
+        print("board 2")
         for stack_key in board.stack_dic.keys():
             stack = board.stack_dic[stack_key]
+            print("board 3")
             if len(stack.card_list) > 0:
                 carte_top = stack.card_list[-1]
                 path = "images/" + carte_top.couleur + carte_top.valeur
                 wid_carte = QCarte(carte_top)
             else:
                 path = "images/naught_" + stack_key
+                print("Pas de carte " + stack_key)
                 wid_carte = QCarte()
             wid_carte.set_image(path)
             self.layout_tas.addWidget(wid_carte)
         # On update les miss et les clues
-        print("NB de clues : " + str(board.clues))
+        print("clues")
         self.label_clue = QLabel("Indices :" + str(board.clues))
         self.label_miss = QLabel("Erreurs :" + str(board.miss))
         self.layout_clue.addWidget(self.label_clue)

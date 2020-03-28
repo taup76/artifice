@@ -103,7 +103,7 @@ class Board:
         self.draw_list = Stack(dic["draw_list"])
         self.discard_list = Stack(dic["discard_list"])
         for key in dic["stack_dic"].keys():
-            self.stack_dic["key"] = Stack(dic["stack_dic"][key])
+            self.stack_dic[key] = Stack(dic["stack_dic"][key])
 
     def init_draw(self):
         for i in range(1, 6):
@@ -142,7 +142,7 @@ class Board:
 
 class Player:
 
-    def __init__(self, name, dic=None):
+    def __init__(self, name=None, dic=None):
         if dic is None:
             self.name = name
             self.card_list = Stack()
@@ -253,7 +253,7 @@ class Game:
         if self.is_started:
             return "Game is already started"
         self.board.init_draw()
-        self.team.init_hands()
+        self.team.init_hands(self.board)
         self.is_started = True
         return ""
 
@@ -266,13 +266,13 @@ class Game:
 
     def get_player_and_card_idx(self, player_dic):
         error_msg = ""
-        current_player = Player()
+        current_player = Player("")
         # create player from received message
-        rcvd_player = Player(player_dic)
+        rcvd_player = Player(dic=player_dic)
 
         # look for selected index
         selected_card_idx = -1
-        card_list = currentPlayer.card_list.card_list
+        card_list = current_player.card_list.card_list
         for i in range(len(card_list)):
             if card_list[i].selected:
                 selected_card_idx = i
@@ -280,7 +280,7 @@ class Game:
         if selected_card_idx < 0:
             error_msg = "No card selected"
 
-        if rcvd_player.name not in self.team.player_dic:
+        if rcvd_player.name not in self.team.player_dic.keys():
             error_msg = "Player not in game"
         else:
             current_player = self.team.player_dic[rcvd_player.name]
