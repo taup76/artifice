@@ -216,3 +216,46 @@ class Team:
     def from_dic(self, dic):
         for key in dic.keys():
             self.player_dic[key] = Player(key, dic[key])
+
+class Game:
+    def __init__(self):
+        self.is_init = False
+        self.is_started = False
+        self.team = None
+        self.board = None
+
+    def to_dic(self):
+        return {"board": self.board.to_dic(), "team": self.team.to_dic()}
+
+    def init_game(self):
+        if self.is_init:
+            return "Game already initialized"
+
+        self.board = Board()
+        self.team = Team()
+        self.is_init = True
+        return ""
+
+    def join_game(self, player_name):
+        if not self.is_init:
+            self.init_game()
+        if self.is_started:
+            return "Game is already started"
+        if len(self.team.player_dic) >= 5:
+            return "Cannot add any more player"
+
+        self.team.add_player(player_name)
+        return ""
+
+    def start_game(self):
+        if not self.is_init:
+            return "Game is not initialized yet"
+        self.board.init_draw()
+        self.team.init_hands()
+        self.is_started = True
+
+    def finish_game(self):
+        self.is_init = False
+        self.is_started = False
+        self.team = None
+        self.board = None
