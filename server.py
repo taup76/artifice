@@ -15,11 +15,11 @@ def parse_msg(msg, game):
     elif command == 'finish_game':
         result_msg = game.finish_game()
     elif command == 'play_card':
-        result_msg = game.play_card(msg["username"], msg["card_idx"])
+        result_msg = game.play_card(msg["player"])
     elif command == 'give_clue':
         result_msg = game.give_clue(msg["username"], msg["card_idx_list"])
     elif command == 'discard_card':
-        result_msg = game.discard_card(msg["username"], msg["card_idx"])
+        result_msg = game.discard_card(msg["player"])
 
     game_dic = game.to_dic()
     game_dic["result"] = result_msg
