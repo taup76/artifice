@@ -1,7 +1,7 @@
 import zmq
 import time
 import json
-from game import Board, Player, Team
+from game import Game
 
 
 def parse_msg(msg, game):

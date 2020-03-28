@@ -48,9 +48,9 @@ class Fenetre(QWidget):
         # On affiche les boutons pour jouer ou défausser les cartes sélectionnées
         self.wid_actions = QWidget()
         self.but_play = QPushButton("Jouer")
-        self.but_play.clicked.connect(self.handle_but_play())
+        self.but_play.clicked.connect(self.handle_but_play)
         self.but_dismiss = QPushButton("Défausser")
-        self.but_dismiss.clicked.connect(self.handle_dismiss())
+        self.but_dismiss.clicked.connect(self.handle_dismiss)
         self.layout_actions = QHBoxLayout()
         self.wid_actions.setLayout(self.layout_actions)
         self.layout_actions.addWidget(self.but_play)
@@ -112,7 +112,7 @@ class Fenetre(QWidget):
         self.username = self.popup_join.field_joueur.text()
         print("Nom du joueur : " + self.username)
         self.client = client.Client(self.username)
-        dic_cmd = {'command':'join_game', 'player': self.username}
+        dic_cmd = {'command':'join_game', 'username': self.username}
         # self.client.connect_socket()
         message_new_game = self.client.make_message(dic_cmd)
         print('join 1')
@@ -127,7 +127,7 @@ class Fenetre(QWidget):
         self.wid_hands.clear_hands()
 
     def handle_but_play(self):
-        self.remove_selected()
+        # self.remove_selected()
         self.team.player_dic[self.username].draw_card()
 
     def handle_dismiss(self):
