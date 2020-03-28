@@ -251,7 +251,7 @@ class Game:
         if not self.is_init:
             return "Game is not initialized yet"
         self.board.init_draw()
-        self.team.init_hands()
+        self.team.init_hands(self.board)
         self.is_started = True
 
     def finish_game(self):

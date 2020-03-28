@@ -45,5 +45,6 @@ class Client:
             print(self.message)
         else:
             print("Format inconnu de commande")
+
         return self.message
 

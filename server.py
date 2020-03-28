@@ -49,8 +49,9 @@ def main():
         #  Parse and process message
         time.sleep(0.1)
         game_dic = parse_msg(message, game)
+        print(game_dic)
 
-        print(json_str)
+        # print(json_str)
         #  Send reply back to client
         socket.send_json(game_dic)
 
