@@ -3,30 +3,15 @@ import time
 import json
 from game import Board, Player, Team
 
-def parse_msg(msg):
+
+def parse_msg(msg, game):
     print("Message :")
     print(msg)
     command = msg["command"]
-    json_str = json.dumps({})
     if command == 'join_game':
-        print('TODO: join game')
-        # get name and create new player
+        result_msg = game.join_game(msg["username"])
     elif command == 'start_game':
-        # start only once
-        # initialize player's hands
-        player = msg["player"]
-        main_board = Board()
-        main_board.init_draw()
-        main_team = Team()
-        main_team.add_player(Player(player))
-        main_team.init_hands(main_board)
-        # Conditionnement et envoi du message vers les clients
-        json_str = json.dumps({"board": main_board.to_dic(), "team": main_team.to_dic()})
-        # context = zmq.Context()
-        # socket = context.socket(zmq.REP)
-        # socket.bind("tcp://*:5555")
-        # start only once
-        # initialize player's hands
+        result_msg = game.start_game()
     elif command == 'stop_game':
         print('TODO: stop game')
     elif command == 'draw_card':
@@ -35,26 +20,42 @@ def parse_msg(msg):
         print('TODO: give a clue')
     elif command == 'discard_card':
         print('TODO: discard a card')
-    return json_str
+
+    game_dic = game.to_dic()
+    game_dic["result"] = result_msg
+    return game_dic
 
 def main():
 
+    # create context for all sockets
     context = zmq.Context()
+
+    # open request reply socket on port 5555
     socket = context.socket(zmq.REP)
     socket.bind("tcp://*:5555")
+
+    # open publisher on port 6666
+    # pub_socket = context.socket(zmq.PUB)
+    # socket.bind("tcp://*:6666")
+
+    # create a game
+    game = Game()
 
     while True:
         #  Wait for next request from client
         message = socket.recv_json()
         print("Received request: %s" % message)
 
-        #  Do some 'work'
+        #  Parse and process message
         time.sleep(0.1)
-        json_str = parse_msg(message)
+        game_dic = parse_msg(message, game)
 
         print(json_str)
         #  Send reply back to client
-        socket.send_string(json_str)
+        socket.send_json(game_dic)
+
+        # publish game
+        #sub_socket.send_string(json_str)
 
 
 if __name__ == "__main__":

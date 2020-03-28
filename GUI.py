@@ -129,7 +129,7 @@ class Fenetre(QWidget):
         self.but_play.clicked.connect(self.on_but_play_clicked)
 
     def on_but_play_clicked(self):
-        print "clicked"
+        print( "clicked")
 
 
 # Définition de la classe Qcarte ---------------------------
