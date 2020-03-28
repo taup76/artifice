@@ -42,7 +42,7 @@ class Fenetre(QWidget):
 
         # Ordre ['r','b','y','g','w']
         self.tas_labels = {'r': QLabel("r0"), 'b': QLabel("b0"), 'y': QLabel("y0"), 'g': QLabel("g0"), 'w': QLabel("w0")}
-        self.draw_board()
+        # self.draw_game()
 
 
         # On affiche les boutons pour jouer ou defausser les cartes selectionnees
@@ -67,24 +67,27 @@ class Fenetre(QWidget):
         self.setWindowTitle("Artifice")
 
     def draw_game(self):
-        self.draw_board()
-        # self.draw_all_hands()
-        # self.show()
+        print("draw 2")
+        self.wid_hands.add_team(self.team, self.username)
+        print("draw 4")
+        print(self.board.to_dic())
+        self.wid_board.add_board(self.board)
+        print("draw 5")
 
-    def draw_board(self):
-        for key in self.board.stack_dic.keys():
-            if self.board.stack_dic[key].get_length() > 0:
-                self.tas_labels[key].setText(self.board.stack_dic[key][-1].to_string())
-            else:
-                self.tas_labels = {'r': QLabel("r0"), 'b': QLabel("b0"), 'y': QLabel("y0"), 'g': QLabel("g0"), 'w': QLabel("w0")}
+    # def draw_board(self):
+    #     for key in self.board.stack_dic.keys():
+    #         if self.board.stack_dic[key].get_length() > 0:
+    #             self.tas_labels[key].setText(self.board.stack_dic[key][-1].to_string())
+    #         else:
+    #             self.tas_labels = {'r': QLabel("r0"), 'b': QLabel("b0"), 'y': QLabel("y0"), 'g': QLabel("g0"), 'w': QLabel("w0")}
 
     def join_game(self):
         dic_cmd = {'username': self.username}
-        self.client.make_message(dic_cmd)
-        message = self.client.socket.recv()
-        game_dic = json.loads(message)
-        self.team = gm.Team(game_dic['team'])
-        self.board = gm.Board(game_dic['board'])
+        message = self.client.make_message(dic_cmd)
+        # message = self.client.socket.recv()
+        # game_dic = json.loads(message)
+        self.team = gm.Team(message['team'])
+        self.board = gm.Board(message['board'])
 
     def open_popup_join(self):
         self.popup_join = Popup_join()
@@ -109,10 +112,13 @@ class Fenetre(QWidget):
         self.client = client.Client(self.username)
         dic_cmd = {'command':'join_game', 'username': self.username}
         message_new_game = self.client.make_message(dic_cmd)
+        print("Message recu ")
+        print(message_new_game)
         self.board = gm.Board(message_new_game['board'])
+        print(self.board.to_dic())
         self.team = gm.Team(message_new_game['team'])
         self.draw_game()
-        self.draw_board()
+        # self.draw_board()
         self.popup_join.close()
         self.wid_hands.clear_hands()
 
@@ -120,12 +126,12 @@ class Fenetre(QWidget):
         self.team.player_dic[self.username].draw_card()
 
     def handle_dismiss(self):
-        dic_cmd = {'command': 'discard_card', 'player': self.team.player_dic[self.username]}
+        dic_cmd = {'command': 'discard_card', 'player': self.team.player_dic[self.username].to_dic()}
         message_dismiss = self.client.make_message(dic_cmd)
-        message = self.client.socket.recv()
-        game_dic = json.loads(message)
+        game_dic = json.loads(message_dismiss)
         self.team = gm.Team(game_dic['team'])
         self.board = gm.Board(game_dic['board'])
+        self.draw_game()
 
 # Definition de la classe Qcarte ---------------------------
 class QCarte(QPushButton):
@@ -155,7 +161,6 @@ class QCarte(QPushButton):
         ButtonIcon = QIcon(pixmap)
         self.setIcon(ButtonIcon)
         self.setIconSize(pixmap.rect().size())
-
 
     def on_click(self):
         if self.isclickable:
@@ -244,19 +249,24 @@ class Widget_board(QWidget):
         self.layout_board.addWidget(self.wid_clue_miss)
 
     def add_board(self, board):
+        print("board 1")
         self.clear_board()
+        print("board 2")
         for stack_key in board.stack_dic.keys():
             stack = board.stack_dic[stack_key]
+            print("board 3")
             if len(stack.card_list) > 0:
                 carte_top = stack.card_list[-1]
                 path = "images/" + carte_top.couleur + carte_top.valeur
                 wid_carte = QCarte(carte_top)
             else:
                 path = "images/naught_" + stack_key
+                print("Pas de carte " + stack_key)
                 wid_carte = QCarte()
             wid_carte.set_image(path)
             self.layout_tas.addWidget(wid_carte)
         # On update les miss et les clues
+        print("clues")
         self.label_clue = QLabel("Indices :" + str(board.clues))
         self.label_miss = QLabel("Erreurs :" + str(board.miss))
         self.layout_clue.addWidget(self.label_clue)

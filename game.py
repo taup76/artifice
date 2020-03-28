@@ -103,7 +103,7 @@ class Board:
         self.draw_list = Stack(dic["draw_list"])
         self.discard_list = Stack(dic["discard_list"])
         for key in dic["stack_dic"].keys():
-            self.stack_dic["key"] = Stack(dic["stack_dic"][key])
+            self.stack_dic[key] = Stack(dic["stack_dic"][key])
 
     def init_draw(self):
         for i in range(1, 6):
