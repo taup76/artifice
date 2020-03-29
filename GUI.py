@@ -14,7 +14,7 @@ import zmq, json
 class Fenetre(QWidget):
     def __init__(self):
         QWidget.__init__(self)
-
+        self.resize(3000,1500)
         self.board = gm.Board()
         self.team = gm.Team()
         self.username = ""
@@ -24,6 +24,7 @@ class Fenetre(QWidget):
         self.wid_hands = Widget_hands()
 
         self.layout_principal = QGridLayout()
+
         # On affiche les boutons pour creer ou rejoindre la partie
         self.wid_buts_play = QWidget()
         self.layout_buts_play = QHBoxLayout()
@@ -79,7 +80,7 @@ class Fenetre(QWidget):
     #         if self.board.stack_dic[key].get_length() > 0:
     #             self.tas_labels[key].setText(self.board.stack_dic[key][-1].to_string())
     #         else:
-    #             self.tas_labels = {'r': QLabel("r0"), 'b': QLabel("b0"), 'y': QLabel("y0"), 'g': QLabel("g0"), 'w': QLabel("w0")}
+    #            self.tas_labels = {'r': QLabel("r0"), 'b': QLabel("b0"), 'y': QLabel("y0"), 'g': QLabel("g0"), 'w': QLabel("w0")}
 
     def join_game(self):
         dic_cmd = {'username': self.username}
@@ -155,6 +156,7 @@ class QCarte(QPushButton):
 
     def set_image(self, path):
         pixmap = QPixmap(path)
+        pixmap = pixmap.scaled(250, 250)
         ButtonIcon = QIcon(pixmap)
         self.setIcon(ButtonIcon)
         self.setIconSize(pixmap.rect().size())
@@ -174,6 +176,7 @@ class QCarte(QPushButton):
                     path_to_im = "images/small/" + self.carte.to_string()
                 self.selected = True
             pixmap = QPixmap(path_to_im)
+            pixmap = pixmap.scaled(220, 200)
             ButtonIcon = QIcon(pixmap)
             self.setIcon(ButtonIcon)
 
@@ -227,13 +230,23 @@ class Widget_hands(QWidget):
 class Widget_board(QWidget):
     def __init__(self):
         QWidget.__init__(self)
+        self.label = QLabel()
+        p = QPixmap("images/hanabi_board")
+        p = p.scaled(2000, 2000, Qt.KeepAspectRatio)
+        self.label.setPixmap(p)
+        self.layout = QFormLayout()
+        self.setLayout(self.layout)
+        self.layout.addWidget(self.label)
+
         # On affiche les tas a remplir
         self.layout_board = QVBoxLayout()
-        self.setLayout(self.layout_board)
+        self.label.setLayout(self.layout_board)
         self.layout_tas = QHBoxLayout()
+        self.layout_tas.setSpacing(20)
+        self.layout_tas.setContentsMargins(295, 600, 295, 100)
         self.wid_tas = QWidget()
         self.wid_tas.setLayout(self.layout_tas)
-        self.layout_board.addWidget(self.wid_tas)
+        self.layout_board.addWidget(self.wid_tas,3)
 
         # On affiche les indices et les bombes erreurs
         self.wid_clue_miss = QWidget()
@@ -244,6 +257,7 @@ class Widget_board(QWidget):
         self.layout_clue.addWidget(self.label_clue)
         self.layout_clue.addWidget(self.label_miss)
         self.layout_board.addWidget(self.wid_clue_miss)
+
 
     def add_board(self, board):
         print("board 1")
