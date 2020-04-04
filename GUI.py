@@ -3,10 +3,9 @@ from PyQt5.QtWidgets import QApplication, QWidget, QPushButton, QGridLayout, QFo
 from PyQt5.QtGui import *
 from PyQt5.Qt import *
 from PyQt5.QtCore import QObject,pyqtSignal
-import server as srv
+from PyQt5.QtGui import QScreen
 import game as gm
 import  client
-import zmq, json
 
 # non blocking subcriber
 # https://stackoverflow.com/questions/26012132/zero-mq-socket-recv-call-is-blocking
@@ -14,7 +13,10 @@ import zmq, json
 class Fenetre(QWidget):
     def __init__(self):
         QWidget.__init__(self)
-        self.resize(3000,1500)
+        size = self.screen().size()
+        self.res_x = size.width()
+        self.res_y = size.height()
+        self.resize(self.res_x, self.res_y)
         self.board = gm.Board()
         self.team = gm.Team()
         self.username = ""
@@ -236,7 +238,12 @@ class Widget_board(QWidget):
         QWidget.__init__(self)
         self.label = QLabel()
         p = QPixmap("images/hanabi_board")
-        p = p.scaled(2000, 2000, Qt.KeepAspectRatio)
+        size = self.screen().size()
+        res_x = size.width()
+        res_y = size.height()
+        ratio_x = 0.5
+        ratio_y = 0.66
+        p = p.scaled(int(ratio_x*res_x), int(ratio_y*res_y), Qt.KeepAspectRatio)
         self.label.setPixmap(p)
         self.layout = QFormLayout()
         self.setLayout(self.layout)
@@ -311,6 +318,8 @@ app = QApplication.instance()
 if not app:
     app = QApplication(sys.argv)
 
+# screen_resolution = app.desktop().screenGeometry()
+# res_x, res_y = screen_resolution.width(), screen_resolution.height()
 fen = Fenetre()
 fen.show()
 
