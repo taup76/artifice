@@ -175,8 +175,9 @@ class Player:
         return self.card_list.pop(idx)
 
     def draw_card(self, board):
-        card = board.draw_list.pop(0)
-        self.append(card)
+        if len(board.draw_list.card_list) > 0:
+            card = board.draw_list.pop(0)
+            self.append(card)
 
     def play_card(self, board, idx):
         card = self.take(idx)
@@ -187,6 +188,7 @@ class Player:
         card = self.take(idx)
         board.discard_list.append(card)
         board.add_clue()
+        self.draw_card(board)
 
 
 class Team:
