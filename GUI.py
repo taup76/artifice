@@ -304,8 +304,8 @@ class Widget_board(QWidget):
         res_y = self.fenetre.frameGeometry().height()
         ratio_x = 0.5
         ratio_y = 0.66
-        self.board_pixmap = self.board_pixmap.scaled(int(ratio_x*res_x), int(ratio_y*res_y), Qt.KeepAspectRatio)
-        self.img_label.setPixmap(self.board_pixmap)
+        p = self.board_pixmap.scaled(int(ratio_x*res_x), int(ratio_y*res_y), Qt.KeepAspectRatio)
+        self.img_label.setPixmap(p)
 
         self.img_label.resize(int(ratio_x*res_x), int(ratio_y*res_y))
 
