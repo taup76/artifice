@@ -132,7 +132,7 @@ class Fenetre(QWidget):
     def handle_dismiss(self):
         dic_cmd = {'command': 'discard_card', 'player': self.team.player_dic[self.username].to_dic()}
         game_dic = self.client.make_message(dic_cmd)
-        # game_dic = json.loads(message_dismiss)
+        print(game_dic)
         self.team = gm.Team(game_dic['team'])
         self.board = gm.Board(game_dic['board'])
         self.draw_game()
@@ -253,14 +253,15 @@ class Widget_board(QWidget):
         self.layout_board = QVBoxLayout()
         self.label.setLayout(self.layout_board)
         self.layout_tas = QHBoxLayout()
-        self.layout_tas.setSpacing(20)
-        self.layout_tas.setContentsMargins(295, 600, 295, 100)
+        self.layout_tas.setSpacing(int(res_x*0.0095))
+        self.layout_tas.setContentsMargins(int(res_x*0.0735), int(res_y*0.33), int(res_x*0.0735), int(res_y*0.01))
         self.wid_tas = QWidget()
         self.wid_tas.setLayout(self.layout_tas)
         self.layout_board.addWidget(self.wid_tas,3)
 
         # On affiche les indices et les bombes erreurs
         self.wid_clue_miss = QWidget()
+        self.wid_clue_miss.setFixedHeight(int(res_y*0.165))
         self.layout_clue = QHBoxLayout()
         self.wid_clue_miss.setLayout(self.layout_clue)
         self.label_clue = QLabel("Indice :" + str(0))
