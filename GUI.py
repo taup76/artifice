@@ -312,10 +312,6 @@ class Widget_board(QWidget):
         self.board_x = self.board_pixmap.width()
         self.board_y = self.board_pixmap.height()
 
-
-
-
-
         # On affiche les tas a remplir
         self.layout_tas.setSpacing(int(self.board_x*0.01))
         self.layout_tas.setContentsMargins(int(self.board_x*0.14), int(self.board_y*0.01), int(self.board_x*0.14), int(self.board_y*0.01))
