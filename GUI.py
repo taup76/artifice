@@ -15,6 +15,8 @@ class Artifice(QMainWindow):
         QMainWindow.__init__(self)
         self.content = Fenetre()
         self.setCentralWidget(self.content)
+        # self.setFixedSize(self.screen().size())
+        # self.setBaseSize(self.screen().size())
 
         menubar = self.menuBar()
         menu = menubar.addMenu('File')
@@ -78,11 +80,11 @@ class Fenetre(QWidget):
 
 
         # On remplit le layout principal
-        self.layout_principal.addWidget(self.wid_buts_play,1,1)
-        self.layout_principal.addWidget(self.wid_board,2,1)
+        self.layout_principal.addWidget(self.wid_buts_play,1,2)
         # self.layout_principal.addWidget(self.wid_clue_miss,3,1)
-        self.layout_principal.addWidget(self.wid_actions,4,1)
+        self.layout_principal.addWidget(self.wid_board,1,1,3,1)
         self.layout_principal.addWidget(self.wid_hands,2,2)
+        self.layout_principal.addWidget(self.wid_actions,3,2)
         self.setLayout(self.layout_principal)
         self.setWindowTitle("Artifice")
 
@@ -152,7 +154,7 @@ class QCarte(QPushButton):
         QPushButton.__init__(self)
         self.hidden = hidden
         if carte is None:
-            path_to_im = 'images/naught_b.png'
+            path_to_im = 'images/hanabi_background_card.png'
         else:
             if self.hidden:
                 path_to_im = "images/hidden.png"
@@ -266,7 +268,7 @@ class Widget_board(QWidget):
 
         # On créé le layout pour les erreurs commises
         self.layout_error = QHBoxLayout()
-        self.wid_error = QWidget()
+        self.wid_error = QLabel()
         self.wid_error.setLayout(self.layout_error)
         self.layout_board.addWidget(self.wid_error)
 
@@ -288,7 +290,8 @@ class Widget_board(QWidget):
         self.wid_draw_play_disc = QWidget()
         self.layout_dpd = QHBoxLayout()
         self.wid_draw_play_disc.setLayout(self.layout_dpd)
-        self.wid_pioche = QLabel("Pioche")
+        self.wid_pioche = QCarte()
+        self.wid_pioche.setText("0")
         self.wid_play_card = QCarte()
         self.wid_dism_stack = QCarte()
         self.layout_dpd.addWidget(self.wid_pioche)
@@ -303,18 +306,49 @@ class Widget_board(QWidget):
         res_x = self.fenetre.frameGeometry().width()
         res_y = self.fenetre.frameGeometry().height()
         ratio_x = 0.5
-        ratio_y = 0.66
+        ratio_y = 1
         p = self.board_pixmap.scaled(int(ratio_x*res_x), int(ratio_y*res_y), Qt.KeepAspectRatio)
         self.img_label.setPixmap(p)
 
         self.img_label.resize(int(ratio_x*res_x), int(ratio_y*res_y))
 
-        self.board_x = self.board_pixmap.width()
-        self.board_y = self.board_pixmap.height()
+        self.board_x = p.width()
+        self.board_y = p.height()
+
+        # On affiche le nombre d'erreurs
+        for error_i in range(self.layout_error.count()):
+            pix_error = QPixmap("images/token/token_error")
+            pix_error = pix_error.scaled(int(self.board_x*0.035), int(self.board_x*0.035), Qt.KeepAspectRatio)
+            self.layout_error.itemAt(error_i).widget().setPixmap(pix_error)
+        self.layout_error.setSpacing(int(0.005 * self.board_x))
+        self.layout_error.setContentsMargins(int(0.412 * self.board_x), int(0.0 * self.board_y),
+                                             int(0.412 * self.board_x), int(0.1 * self.board_y))
 
         # On affiche les tas a remplir
-        self.layout_tas.setSpacing(int(self.board_x*0.01))
-        self.layout_tas.setContentsMargins(int(self.board_x*0.14), int(self.board_y*0.01), int(self.board_x*0.14), int(self.board_y*0.01))
+        for stack_i in range(self.layout_tas.count()):
+            pix_stack = QPixmap("images/empty_stack")
+            pix_stack = pix_stack.scaled(int(0.19*self.board_x), int(0.32*self.board_y), Qt.KeepAspectRatio)
+            self.layout_tas.itemAt(stack_i).widget().setPixmap(pix_stack)
+        self.layout_tas.setSpacing(int(self.board_x*0.011))
+        self.layout_tas.setContentsMargins(int(self.board_x*0.143), int(self.board_y*0.04), int(self.board_x*0.143), int(self.board_y*0.01))
+
+        # On affiche les indices
+        for stack_i in range(self.layout_clue.count()):
+            pix_clue = QPixmap("images/token/token_clue")
+            pix_clue = pix_clue.scaled(int(self.board_x*0.035), int(self.board_x*0.035), Qt.KeepAspectRatio)
+            self.layout_clue.itemAt(stack_i).widget().setPixmap(pix_clue)
+        self.layout_clue.setSpacing(int(self.board_x*0.013))
+        self.layout_clue.setContentsMargins(int(self.board_x*0.292), int(self.board_y*0.05), int(self.board_x*0.292), int(self.board_y*0.01))
+
+        # On affiche la defausse
+        for dpd_i in range(self.layout_dpd.count()):
+            pix_dpd = QPixmap("images/hanabi_background_card")
+            pix_dpd = pix_dpd.scaled(int(0.19*self.board_x), int(0.15*self.board_y), Qt.KeepAspectRatio)
+            self.layout_dpd.itemAt(dpd_i).widget().setIcon(QIcon(pix_dpd))
+        self.layout_dpd.setSpacing(int(self.board_x*0.011))
+        self.layout_dpd.setContentsMargins(int(self.board_x*0.143), int(self.board_y*0.04), int(self.board_x*0.143), int(self.board_y*0.01))
+
+
 
     def add_board(self, board):
         self.clear_board()
@@ -325,27 +359,19 @@ class Widget_board(QWidget):
             pix_error = pix_error.scaled(25, 25, Qt.KeepAspectRatio)
             lab_error.setPixmap(pix_error)
             self.layout_error.addWidget(lab_error)
-        self.layout_error.setSpacing(int(7/802*self.board_x))
-        print("Board " + str(self.board_x) + " " + str(self.board_y))
-        self.layout_error.setContentsMargins(int(0.412*self.board_x), int(0.029*self.board_y),
-                                                 int(0.412*self.board_x), int(0.0*self.board_y))
+
         # On affiche les stacks
         for stack_key in board.stack_dic.keys():
             stack = board.stack_dic[stack_key]
             lab_stack = QLabel()
             if len(stack.card_list) > 0:
-                print("joue 1")
                 carte_top = stack.card_list[-1]
                 path = "images/stack_" + carte_top.color + str(carte_top.value)
-                print(path)
                 wid_stack = QLabel()
                 stack_im = QPixmap(path)
                 wid_stack.setPixmap(path)
-                print("joue 2")
                 wid_stack.resize(stack_im.width(), stack_im.height())
-                # print("joue 3")
                 # self.layout_tas.addWidget(wid_stack)
-                print("joue 4")
                 pix_stack = QPixmap("images/stack_" + carte_top.color + str(carte_top.value))
             else:
                 pix_stack = QPixmap("images/empty_stack")
@@ -353,28 +379,26 @@ class Widget_board(QWidget):
                 print("Pas de carte " + stack_key)
             lab_stack.setPixmap(pix_stack)
             self.layout_tas.addWidget(lab_stack)
-        # On update les miss et les clues
         # On affiche les indices
         for i in range(board.clues):
             lab_clue = QLabel()
             pix_clue = QPixmap("images/token/token_clue")
-            pix_clue = pix_clue.scaled(25, 25, Qt.KeepAspectRatio)
+            # pix_clue = pix_clue.scaled(25, 25, Qt.KeepAspectRatio)
             lab_clue.setPixmap(pix_clue)
             self.layout_clue.addWidget(lab_clue)
-        self.layout_clue.setSpacing(int(7/802*self.board_x))
-        self.layout_clue.setContentsMargins(int(0.3*self.board_x), int(0.01*self.board_y), int(0.3*self.board_x), int(0*self.board_y) )
+        # self.layout_clue.setSpacing(int(7/802*self.board_x))
+        # self.layout_clue.setContentsMargins(int(0.3*self.board_x), int(0.01*self.board_y), int(0.3*self.board_x), int(0*self.board_y) )
         # self.layout_clue.addWidget(self.label_miss)
         # On affiche les piles de pioche, la carte jouee et la defausse
         # TODO ajouter la carte jouee
-        self.wid_pioche = QLabel("Cartes restantes : " + str(len(board.draw_list.card_list)))
+        self.wid_pioche = QCarte()
+        self.wid_pioche.setText(str(len(board.draw_list.card_list)))
         self.layout_dpd.addWidget(self.wid_pioche)
         if len(board.discard_list.card_list)>0:
             self.wid_dism_stack = QCarte(board.discard_list.card_list[-1])
         else:
             self.wid_dism_stack = QCarte()
-        # size = self.screen().size()
-        # res_y = size.height()
-        # self.wid_dism_stack.setFixedHeight(int(res_y*0.165))
+            # self.wid_dism_stack.setFixedSize(155,155)
         self.layout_dpd.addWidget(self.wid_dism_stack)
 
     def clear_board(self):
