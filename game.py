@@ -14,11 +14,12 @@ class Card:
         return self.color + '' + str(self.value)
 
     def to_dic(self):
-        return {"color": self.color, "value": self.value}
+        return {"color": self.color, "value": self.value, "selected": self.selected}
 
     def from_dic(self, dic):
         self.color = dic["color"]
         self.value = dic["value"]
+        self.selected = dic["selected"]
 
 
 class Stack:
