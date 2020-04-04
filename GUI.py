@@ -125,12 +125,16 @@ class Fenetre(QWidget):
         self.team.player_dic[self.username].draw_card()
 
     def handle_dismiss(self):
+        print("dismiss 1")
         dic_cmd = {'command': 'discard_card', 'player': self.team.player_dic[self.username].to_dic()}
         game_dic = self.client.make_message(dic_cmd)
+        print("dismiss 2")
         print(game_dic)
         self.team = gm.Team(game_dic['team'])
         self.board = gm.Board(game_dic['board'])
+        print("dismiss 3")
         self.draw_game()
+        print("dismiss 4")
 
 # Definition de la classe Qcarte ---------------------------
 class QCarte(QPushButton):
@@ -291,12 +295,13 @@ class Widget_board(QWidget):
         self.label_miss = QLabel("Erreurs :" + str(board.miss))
         self.layout_clue.addWidget(self.label_clue)
         self.layout_clue.addWidget(self.label_miss)
-        # self.wid_pioche = QLabel(str(len(board.draw_list.card_list)))
         if len(board.discard_list.card_list)>0:
-            self.wid_dism_stack = QCarte(str(board.discard_list.card_list[-1]))
+            self.wid_dism_stack = QCarte(board.discard_list.card_list[-1])
         else:
             self.wid_dism_stack = QCarte()
-        # self.layout_clue.addWidget(self.wid_pioche)
+        size = self.screen().size()
+        res_y = size.height()
+        self.wid_dism_stack.setFixedHeight(int(res_y*0.165))
         self.layout_clue.addWidget(self.wid_dism_stack)
         self.wid_pioche = QLabel("Cartes restantes : " + str(len(board.draw_list.card_list)))
         self.layout_clue.addWidget(self.wid_pioche)
