@@ -132,7 +132,7 @@ class Board:
 
     def play_card(self, card):
         target_stack = self.stack_dic[card.color]
-        if len(target_stack) + 1 == card.value:
+        if len(target_stack.card_list) + 1 == card.value:
             # if ok, add to stack
             self.stack_dic[card.color].append(card)
         else:
@@ -183,6 +183,7 @@ class Player:
         card = self.take(idx)
         # check whether card can be added to stack or not
         board.play_card(card)
+        self.draw_card(board)
 
     def discard_card(self, board, idx):
         card = self.take(idx)

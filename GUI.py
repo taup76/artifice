@@ -54,14 +54,14 @@ class Fenetre(QWidget):
         self.but_play.clicked.connect(self.handle_but_play)
         self.but_dismiss = QPushButton("Defausser")
         self.but_dismiss.clicked.connect(self.handle_dismiss)
-        self.wid_pioche = QLabel(str(0))
-        self.wid_dism_stack = QCarte()
+        # self.wid_pioche = QLabel(str(0))
+        # self.wid_dism_stack = QCarte()
         self.layout_actions = QHBoxLayout()
         self.wid_actions.setLayout(self.layout_actions)
         self.layout_actions.addWidget(self.but_play)
         self.layout_actions.addWidget(self.but_dismiss)
-        self.layout_actions.addWidget(self.wid_pioche)
-        self.layout_actions.addWidget(self.wid_dism_stack)
+        # self.layout_actions.addWidget(self.wid_pioche)
+        # self.layout_actions.addWidget(self.wid_dism_stack)
 
 
         # On remplit le layout principal
@@ -122,19 +122,22 @@ class Fenetre(QWidget):
         self.wid_hands.clear_hands()
 
     def handle_but_play(self):
-        self.team.player_dic[self.username].draw_card()
-
-    def handle_dismiss(self):
-        print("dismiss 1")
-        dic_cmd = {'command': 'discard_card', 'player': self.team.player_dic[self.username].to_dic()}
+        print("On joue une carte")
+        dic_cmd = {'command': 'play_card', 'player': self.team.player_dic[self.username].to_dic()}
         game_dic = self.client.make_message(dic_cmd)
-        print("dismiss 2")
         print(game_dic)
         self.team = gm.Team(game_dic['team'])
         self.board = gm.Board(game_dic['board'])
-        print("dismiss 3")
         self.draw_game()
-        print("dismiss 4")
+
+    def handle_dismiss(self):
+        print("On défausse une carte")
+        dic_cmd = {'command': 'discard_card', 'player': self.team.player_dic[self.username].to_dic()}
+        game_dic = self.client.make_message(dic_cmd)
+        print(game_dic)
+        self.team = gm.Team(game_dic['team'])
+        self.board = gm.Board(game_dic['board'])
+        self.draw_game()
 
 # Definition de la classe Qcarte ---------------------------
 class QCarte(QPushButton):
@@ -155,6 +158,7 @@ class QCarte(QPushButton):
         self.selected = False
         self.clicked.connect(self.on_click)
         self.image = path_to_im
+        self.setStyleSheet("QPushButton {border-style: outset; border-width: 0px;}")
 
     def __str__(self):
         return self.carte
@@ -281,9 +285,13 @@ class Widget_board(QWidget):
         for stack_key in board.stack_dic.keys():
             stack = board.stack_dic[stack_key]
             if len(stack.card_list) > 0:
+                print("joue 1")
                 carte_top = stack.card_list[-1]
-                path = "images/" + carte_top.couleur + carte_top.valeur
-                wid_carte = QCarte(carte_top)
+                print("joue 2")
+                path = "images/" + carte_top.color + str(carte_top.value)
+                print("joue 3")
+                wid_carte = QCarte(carte = carte_top)
+                print("joue 4")
             else:
                 path = "images/naught_" + stack_key
                 print("Pas de carte " + stack_key)
@@ -299,9 +307,9 @@ class Widget_board(QWidget):
             self.wid_dism_stack = QCarte(board.discard_list.card_list[-1])
         else:
             self.wid_dism_stack = QCarte()
-        size = self.screen().size()
-        res_y = size.height()
-        self.wid_dism_stack.setFixedHeight(int(res_y*0.165))
+        # size = self.screen().size()
+        # res_y = size.height()
+        # self.wid_dism_stack.setFixedHeight(int(res_y*0.165))
         self.layout_clue.addWidget(self.wid_dism_stack)
         self.wid_pioche = QLabel("Cartes restantes : " + str(len(board.draw_list.card_list)))
         self.layout_clue.addWidget(self.wid_pioche)
