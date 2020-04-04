@@ -270,21 +270,21 @@ class Widget_board(QWidget):
         self.layout_error = QHBoxLayout()
         self.wid_error = QLabel()
         self.wid_error.setLayout(self.layout_error)
-        self.layout_board.addWidget(self.wid_error)
+        self.layout_board.addWidget(self.wid_error, 1000)
 
         # On affiche les tas a remplir
         self.img_label.setLayout(self.layout_board)
         self.layout_tas = QHBoxLayout()
         self.wid_tas = QWidget()
         self.wid_tas.setLayout(self.layout_tas)
-        self.layout_board.addWidget(self.wid_tas)
+        self.layout_board.addWidget(self.wid_tas, 3000)
 
         # On affiche les indices
         self.layout_clue = QHBoxLayout()
         self.wid_clues = QWidget()
         self.wid_clues.setLayout(self.layout_clue)
-        self.layout_board.addWidget(self.wid_clues)
-        self.layout_board.addWidget(self.wid_clues)
+        # self.layout_board.addWidget(self.wid_clues)
+        self.layout_board.addWidget(self.wid_clues, 1000)
 
         # On affiche la pioche, la carte jouee et la defausse
         self.wid_draw_play_disc = QWidget()
@@ -297,7 +297,7 @@ class Widget_board(QWidget):
         self.layout_dpd.addWidget(self.wid_pioche)
         self.layout_dpd.addWidget(self.wid_play_card)
         self.layout_dpd.addWidget(self.wid_dism_stack)
-        self.layout_board.addWidget(self.wid_draw_play_disc)
+        self.layout_board.addWidget(self.wid_draw_play_disc, 1500)
 
         self.resize_board()
 
@@ -310,7 +310,7 @@ class Widget_board(QWidget):
         p = self.board_pixmap.scaled(int(ratio_x*res_x), int(ratio_y*res_y), Qt.KeepAspectRatio)
         self.img_label.setPixmap(p)
 
-        self.img_label.resize(int(ratio_x*res_x), int(ratio_y*res_y))
+        # self.img_label.resize(int(ratio_x*res_x), int(ratio_y*res_y))
 
         self.board_x = p.width()
         self.board_y = p.height()
@@ -321,7 +321,7 @@ class Widget_board(QWidget):
             pix_error = pix_error.scaled(int(self.board_x*0.035), int(self.board_x*0.035), Qt.KeepAspectRatio)
             self.layout_error.itemAt(error_i).widget().setPixmap(pix_error)
         self.layout_error.setSpacing(int(0.005 * self.board_x))
-        self.layout_error.setContentsMargins(int(0.412 * self.board_x), int(0.0 * self.board_y),
+        self.layout_error.setContentsMargins(int(0.412 * self.board_x), int(0.03 * self.board_y),
                                              int(0.412 * self.board_x), int(0.0 * self.board_y))
 
         # On affiche les tas a remplir
@@ -330,7 +330,7 @@ class Widget_board(QWidget):
             pix_stack = pix_stack.scaled(int(0.19*self.board_x), int(0.32*self.board_y), Qt.KeepAspectRatio)
             self.layout_tas.itemAt(stack_i).widget().setPixmap(pix_stack)
         self.layout_tas.setSpacing(int(self.board_x*0.011))
-        self.layout_tas.setContentsMargins(int(self.board_x*0.143), int(self.board_y*0.0), int(self.board_x*0.143), int(self.board_y*0.0))
+        self.layout_tas.setContentsMargins(int(self.board_x*0.143), int(self.board_y*0.14), int(self.board_x*0.143), int(self.board_y*0.0))
 
         # On affiche les indices
         for stack_i in range(self.layout_clue.count()):
@@ -338,7 +338,7 @@ class Widget_board(QWidget):
             pix_clue = pix_clue.scaled(int(self.board_x*0.035), int(self.board_x*0.035), Qt.KeepAspectRatio)
             self.layout_clue.itemAt(stack_i).widget().setPixmap(pix_clue)
         self.layout_clue.setSpacing(int(self.board_x*0.013))
-        self.layout_clue.setContentsMargins(int(self.board_x*0.292), int(self.board_y*0.0), int(self.board_x*0.292), int(self.board_y*0.0))
+        self.layout_clue.setContentsMargins(int(self.board_x*0.292), int(self.board_y*0.11), int(self.board_x*0.292), int(self.board_y*0.0))
 
         # On affiche les elements du dpd
         for dpd_i in range(self.layout_dpd.count()):
@@ -346,7 +346,7 @@ class Widget_board(QWidget):
             pix_dpd = pix_dpd.scaled(int(0.19*self.board_x), int(0.15*self.board_y), Qt.KeepAspectRatio)
             self.layout_dpd.itemAt(dpd_i).widget().setIcon(QIcon(pix_dpd))
         self.layout_dpd.setSpacing(int(self.board_x*0.011))
-        self.layout_dpd.setContentsMargins(int(self.board_x*0.143), int(self.board_y*0.0), int(self.board_x*0.143), int(self.board_y*0.0))
+        self.layout_dpd.setContentsMargins(int(self.board_x*0.22), int(self.board_y*0.0), int(self.board_x*0.22), int(self.board_y*0.005))
 
 
 
