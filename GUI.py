@@ -74,12 +74,10 @@ class Fenetre(QWidget):
         self.setWindowTitle("Artifice")
 
     def draw_game(self):
-        print("draw 2")
         self.wid_hands.add_team(self.team, self.username)
-        print("draw 4")
+        print("draw")
         print(self.board.to_dic())
         self.wid_board.add_board(self.board)
-        print("draw 5")
 
     # def draw_board(self):
     #     for key in self.board.stack_dic.keys():
@@ -102,16 +100,13 @@ class Fenetre(QWidget):
         self.popup_join.show()
 
     def handle_launch(self):
-        print('launch game 1')
         dic_cmd = {'command':'start_game', 'username': self.username}
         game_dic = self.client.make_message(dic_cmd)
-        print('launch game 2')
-        # game_dic = self.client.socket.recv_json()
-        print('launch game 3')
         self.team = gm.Team(game_dic['team'])
         self.board = gm.Board(game_dic['board'])
 
         self.wid_hands.add_team(self.team, self.username)
+        self.wid_board.add_board(self.board)
         print("Initialisation du jeu OK")
 
     def handle_ok_join(self):
@@ -278,12 +273,9 @@ class Widget_board(QWidget):
 
 
     def add_board(self, board):
-        print("board 1")
         self.clear_board()
-        print("board 2")
         for stack_key in board.stack_dic.keys():
             stack = board.stack_dic[stack_key]
-            print("board 3")
             if len(stack.card_list) > 0:
                 carte_top = stack.card_list[-1]
                 path = "images/" + carte_top.couleur + carte_top.valeur
@@ -295,26 +287,25 @@ class Widget_board(QWidget):
             wid_carte.set_image(path)
             self.layout_tas.addWidget(wid_carte)
         # On update les miss et les clues
-        print("clues")
         self.label_clue = QLabel("Indices :" + str(board.clues))
         self.label_miss = QLabel("Erreurs :" + str(board.miss))
         self.layout_clue.addWidget(self.label_clue)
         self.layout_clue.addWidget(self.label_miss)
-        self.wid_pioche = QLabel(str(len(board.draw_list.card_list)))
+        # self.wid_pioche = QLabel(str(len(board.draw_list.card_list)))
         if len(board.discard_list.card_list)>0:
             self.wid_dism_stack = QCarte(str(board.discard_list.card_list[-1]))
         else:
             self.wid_dism_stack = QCarte()
-        self.layout_clue.addWidget(self.wid_pioche)
+        # self.layout_clue.addWidget(self.wid_pioche)
         self.layout_clue.addWidget(self.wid_dism_stack)
+        self.wid_pioche = QLabel("Cartes restantes : " + str(len(board.draw_list.card_list)))
+        self.layout_clue.addWidget(self.wid_pioche)
 
     def clear_board(self):
         for i in reversed(range(self.layout_tas.count())):
             self.layout_tas.itemAt(i).widget().setParent(None)
-        self.layout_clue.itemAt(3).widget().setParent(None)
-        self.layout_clue.itemAt(2).widget().setParent(None)
-        self.layout_clue.itemAt(1).widget().setParent(None)
-        self.layout_clue.itemAt(0).widget().setParent(None)
+        for i in reversed(range(self.layout_clue.count())):
+            self.layout_clue.itemAt(i).widget().setParent(None)
 
 
 app = QApplication.instance()

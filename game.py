@@ -68,7 +68,7 @@ class Board:
             self.discard_list = Stack()
             self.clues = 8
             self.miss = 3
-            self.init_draw()
+            # self.init_draw()
         else:
             self.stack_dic = {}
             self.from_dic(dic)
