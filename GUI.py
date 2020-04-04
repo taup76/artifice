@@ -287,17 +287,24 @@ class Widget_board(QWidget):
             if len(stack.card_list) > 0:
                 print("joue 1")
                 carte_top = stack.card_list[-1]
+                # path = "images/" + carte_top.color + str(carte_top.value)
+                # wid_carte = QCarte(carte = carte_top)
+                path = "images/stack_" + carte_top.color + str(carte_top.value)
+                print(path)
+                wid_stack = QLabel()
+                stack_im = QPixmap(path)
+                wid_stack.setPixmap(path)
                 print("joue 2")
-                path = "images/" + carte_top.color + str(carte_top.value)
-                print("joue 3")
-                wid_carte = QCarte(carte = carte_top)
+                wid_stack.resize(stack_im.width(), stack_im.height())
+                # print("joue 3")
+                self.layout_tas.addWidget(wid_stack)
                 print("joue 4")
             else:
-                path = "images/naught_" + stack_key
+                # path = "images/naught_" + stack_key
                 print("Pas de carte " + stack_key)
-                wid_carte = QCarte()
-            wid_carte.set_image(path)
-            self.layout_tas.addWidget(wid_carte)
+                # wid_carte = QCarte()
+            # wid_carte.set_image(path)
+            # self.layout_tas.addWidget(wid_carte)
         # On update les miss et les clues
         self.label_clue = QLabel("Indices :" + str(board.clues))
         self.label_miss = QLabel("Erreurs :" + str(board.miss))
