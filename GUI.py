@@ -53,7 +53,7 @@ class Fenetre(QWidget):
         self.layout_buts_play.addWidget(self.but_launch)
 
         # On affiche le plateau
-        self.wid_board = Widget_board()
+        self.wid_board = Widget_board(self)
         self.wid_board.add_board(self.board)
 
         # Ordre ['r','b','y','g','w']
@@ -91,13 +91,6 @@ class Fenetre(QWidget):
         print("draw")
         print(self.board.to_dic())
         self.wid_board.add_board(self.board)
-
-    # def draw_board(self):
-    #     for key in self.board.stack_dic.keys():
-    #         if self.board.stack_dic[key].get_length() > 0:
-    #             self.tas_labels[key].setText(self.board.stack_dic[key][-1].to_string())
-    #         else:
-    #            self.tas_labels = {'r': QLabel("r0"), 'b': QLabel("b0"), 'y': QLabel("y0"), 'g': QLabel("g0"), 'w': QLabel("w0")}
 
     def join_game(self):
         dic_cmd = {'username': self.username}
@@ -252,22 +245,21 @@ class Widget_hands(QWidget):
             self.layout_hands.itemAt(i).widget().setParent(None)
 
 class Widget_board(QWidget):
-    def __init__(self):
+    def resizeEvent(self, event):
+        self.resize_board()
+
+    def __init__(self, fenetre):
         QWidget.__init__(self)
-        self.label = QLabel()
-        p = QPixmap("images/hanabi_board")
-        size = self.screen().size()
-        res_x = size.width()
-        res_y = size.height()
-        ratio_x = 0.5
-        ratio_y = 0.66
-        p = p.scaled(int(ratio_x*res_x), int(ratio_y*res_y), Qt.KeepAspectRatio)
-        self.label.setPixmap(p)
-        self.board_x = p.width()
-        self.board_y = p.height()
+        # fenetre principale
+        self.fenetre = fenetre
+
+        # image du plateau
+        self.img_label = QLabel()
+        self.board_pixmap = QPixmap("images/hanabi_board")
+        #self.img_label.setPixmap(self.board_pixmap)
         self.layout = QFormLayout()
         self.setLayout(self.layout)
-        self.layout.addWidget(self.label)
+        self.layout.addWidget(self.img_label)
 
         # On definit le layout principal
         self.layout_board = QVBoxLayout()
@@ -279,10 +271,8 @@ class Widget_board(QWidget):
         self.layout_board.addWidget(self.wid_error)
 
         # On affiche les tas a remplir
-        self.label.setLayout(self.layout_board)
+        self.img_label.setLayout(self.layout_board)
         self.layout_tas = QHBoxLayout()
-        self.layout_tas.setSpacing(int(self.board_x*0.01))
-        self.layout_tas.setContentsMargins(int(self.board_x*0.14), int(self.board_y*0.01), int(self.board_x*0.14), int(self.board_y*0.01))
         self.wid_tas = QWidget()
         self.wid_tas.setLayout(self.layout_tas)
         self.layout_board.addWidget(self.wid_tas)
@@ -305,6 +295,30 @@ class Widget_board(QWidget):
         self.layout_dpd.addWidget(self.wid_play_card)
         self.layout_dpd.addWidget(self.wid_dism_stack)
         self.layout_board.addWidget(self.wid_draw_play_disc)
+
+        self.resize_board()
+
+    def resize_board(self):
+        # update geometry
+        res_x = self.fenetre.frameGeometry().width()
+        res_y = self.fenetre.frameGeometry().height()
+        ratio_x = 0.5
+        ratio_y = 0.66
+        self.board_pixmap = self.board_pixmap.scaled(int(ratio_x*res_x), int(ratio_y*res_y), Qt.KeepAspectRatio)
+        self.img_label.setPixmap(self.board_pixmap)
+
+        self.img_label.resize(int(ratio_x*res_x), int(ratio_y*res_y))
+
+        self.board_x = self.board_pixmap.width()
+        self.board_y = self.board_pixmap.height()
+
+
+
+
+
+        # On affiche les tas a remplir
+        self.layout_tas.setSpacing(int(self.board_x*0.01))
+        self.layout_tas.setContentsMargins(int(self.board_x*0.14), int(self.board_y*0.01), int(self.board_x*0.14), int(self.board_y*0.01))
 
     def add_board(self, board):
         self.clear_board()
