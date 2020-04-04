@@ -175,12 +175,14 @@ class QCarte(QPushButton):
                 else:
                     path_to_im = "images/" + self.carte.to_string()
                 self.selected = False
+                self.carte.selected = False
             else:
                 if self.hidden:
                     path_to_im = "images/small/hidden"
                 else:
                     path_to_im = "images/small/" + self.carte.to_string()
                 self.selected = True
+                self.carte.selected = True
             pixmap = QPixmap(path_to_im)
             pixmap = pixmap.scaled(220, 200)
             ButtonIcon = QIcon(pixmap)
