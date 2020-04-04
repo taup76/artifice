@@ -281,8 +281,8 @@ class Widget_board(QWidget):
         # On affiche les tas a remplir
         self.label.setLayout(self.layout_board)
         self.layout_tas = QHBoxLayout()
-        self.layout_tas.setSpacing(int(res_x*0.0095))
-        self.layout_tas.setContentsMargins(int(res_x*0.0735), int(res_y*0.33), int(res_x*0.0735), int(res_y*0.01))
+        self.layout_tas.setSpacing(int(self.board_x*0.01))
+        self.layout_tas.setContentsMargins(int(self.board_x*0.14), int(self.board_y*0.01), int(self.board_x*0.14), int(self.board_y*0.01))
         self.wid_tas = QWidget()
         self.wid_tas.setLayout(self.layout_tas)
         self.layout_board.addWidget(self.wid_tas)
@@ -322,6 +322,7 @@ class Widget_board(QWidget):
         # On affiche les stacks
         for stack_key in board.stack_dic.keys():
             stack = board.stack_dic[stack_key]
+            lab_stack = QLabel()
             if len(stack.card_list) > 0:
                 print("joue 1")
                 carte_top = stack.card_list[-1]
@@ -333,12 +334,15 @@ class Widget_board(QWidget):
                 print("joue 2")
                 wid_stack.resize(stack_im.width(), stack_im.height())
                 # print("joue 3")
-                self.layout_tas.addWidget(wid_stack)
+                # self.layout_tas.addWidget(wid_stack)
                 print("joue 4")
+                pix_stack = QPixmap("images/stack_" + carte_top.color + str(carte_top.value))
             else:
-                # path = "images/naught_" + stack_key
+                pix_stack = QPixmap("images/empty_stack")
+                pix_stack = pix_stack.scaled(int(0.125*self.board_x), int(0.33*self.board_y), Qt.KeepAspectRatio)
                 print("Pas de carte " + stack_key)
-                
+            lab_stack.setPixmap(pix_stack)
+            self.layout_tas.addWidget(lab_stack)
         # On update les miss et les clues
         # On affiche les indices
         for i in range(board.clues):
