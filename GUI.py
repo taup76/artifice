@@ -322,7 +322,7 @@ class Widget_board(QWidget):
             self.layout_error.itemAt(error_i).widget().setPixmap(pix_error)
         self.layout_error.setSpacing(int(0.005 * self.board_x))
         self.layout_error.setContentsMargins(int(0.412 * self.board_x), int(0.0 * self.board_y),
-                                             int(0.412 * self.board_x), int(0.1 * self.board_y))
+                                             int(0.412 * self.board_x), int(0.0 * self.board_y))
 
         # On affiche les tas a remplir
         for stack_i in range(self.layout_tas.count()):
@@ -330,7 +330,7 @@ class Widget_board(QWidget):
             pix_stack = pix_stack.scaled(int(0.19*self.board_x), int(0.32*self.board_y), Qt.KeepAspectRatio)
             self.layout_tas.itemAt(stack_i).widget().setPixmap(pix_stack)
         self.layout_tas.setSpacing(int(self.board_x*0.011))
-        self.layout_tas.setContentsMargins(int(self.board_x*0.143), int(self.board_y*0.04), int(self.board_x*0.143), int(self.board_y*0.01))
+        self.layout_tas.setContentsMargins(int(self.board_x*0.143), int(self.board_y*0.0), int(self.board_x*0.143), int(self.board_y*0.0))
 
         # On affiche les indices
         for stack_i in range(self.layout_clue.count()):
@@ -338,15 +338,15 @@ class Widget_board(QWidget):
             pix_clue = pix_clue.scaled(int(self.board_x*0.035), int(self.board_x*0.035), Qt.KeepAspectRatio)
             self.layout_clue.itemAt(stack_i).widget().setPixmap(pix_clue)
         self.layout_clue.setSpacing(int(self.board_x*0.013))
-        self.layout_clue.setContentsMargins(int(self.board_x*0.292), int(self.board_y*0.05), int(self.board_x*0.292), int(self.board_y*0.01))
+        self.layout_clue.setContentsMargins(int(self.board_x*0.292), int(self.board_y*0.0), int(self.board_x*0.292), int(self.board_y*0.0))
 
-        # On affiche la defausse
+        # On affiche les elements du dpd
         for dpd_i in range(self.layout_dpd.count()):
-            pix_dpd = QPixmap("images/hanabi_background_card")
+            pix_dpd = QPixmap("images/hanabi_background_card") # TODO a remplacer par naught
             pix_dpd = pix_dpd.scaled(int(0.19*self.board_x), int(0.15*self.board_y), Qt.KeepAspectRatio)
             self.layout_dpd.itemAt(dpd_i).widget().setIcon(QIcon(pix_dpd))
         self.layout_dpd.setSpacing(int(self.board_x*0.011))
-        self.layout_dpd.setContentsMargins(int(self.board_x*0.143), int(self.board_y*0.04), int(self.board_x*0.143), int(self.board_y*0.01))
+        self.layout_dpd.setContentsMargins(int(self.board_x*0.143), int(self.board_y*0.0), int(self.board_x*0.143), int(self.board_y*0.0))
 
 
 
@@ -394,6 +394,8 @@ class Widget_board(QWidget):
         self.wid_pioche = QCarte()
         self.wid_pioche.setText(str(len(board.draw_list.card_list)))
         self.layout_dpd.addWidget(self.wid_pioche)
+        self.wid_play_card = QCarte()
+        self.layout_dpd.addWidget(self.wid_play_card)
         if len(board.discard_list.card_list)>0:
             self.wid_dism_stack = QCarte(board.discard_list.card_list[-1])
         else:
