@@ -185,7 +185,7 @@ class Player:
 
     def discard_card(self, board, idx):
         card = self.take(idx)
-        self.discard_list.append(card)
+        board.discard_list.append(card)
         board.add_clue()
 
 
@@ -269,12 +269,16 @@ class Game:
         error_msg = ""
         current_player = Player("")
         # create player from received message
+        print(player_dic)
         rcvd_player = Player(dic=player_dic)
 
         # look for selected index
         selected_card_idx = -1
-        card_list = current_player.card_list.card_list
+        card_list = rcvd_player.card_list.card_list
+
         for i in range(len(card_list)):
+            print("color  " + card_list[i].color)
+            print(card_list[i].selected)
             if card_list[i].selected:
                 selected_card_idx = i
                 break
