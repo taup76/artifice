@@ -268,7 +268,7 @@ class Widget_board(QWidget):
 
         # On créé le layout pour les erreurs commises
         self.layout_error = QHBoxLayout()
-        self.wid_error = QLabel()
+        self.wid_error = QWidget()
         self.wid_error.setLayout(self.layout_error)
         self.layout_board.addWidget(self.wid_error, 1000)
 
@@ -309,9 +309,13 @@ class Widget_board(QWidget):
         ratio_y = 1
         p = self.board_pixmap.scaled(int(ratio_x*res_x), int(ratio_y*res_y), Qt.KeepAspectRatio)
         self.img_label.setPixmap(p)
+        self.img_label.setStyleSheet("QLabel {border-style: outset; border-width: 3px;}")
 
-        # self.img_label.resize(int(ratio_x*res_x), int(ratio_y*res_y))
+        # self.img_label.resize(p.rect().size())
+        self.img_label.setFixedHeight(p.rect().size().height())
 
+        print("Img_label : " + str(self.img_label.width()) + " " + str(self.img_label.height()))
+        print("p : " + str(p.width()) + " " + str(p.height()))
         self.board_x = p.width()
         self.board_y = p.height()
 
@@ -321,16 +325,16 @@ class Widget_board(QWidget):
             pix_error = pix_error.scaled(int(self.board_x*0.035), int(self.board_x*0.035), Qt.KeepAspectRatio)
             self.layout_error.itemAt(error_i).widget().setPixmap(pix_error)
         self.layout_error.setSpacing(int(0.005 * self.board_x))
-        self.layout_error.setContentsMargins(int(0.412 * self.board_x), int(0.03 * self.board_y),
+        self.layout_error.setContentsMargins(int(0.412 * self.board_x), int(0.0 * self.board_y),
                                              int(0.412 * self.board_x), int(0.0 * self.board_y))
-
+        
         # On affiche les tas a remplir
         for stack_i in range(self.layout_tas.count()):
             pix_stack = QPixmap("images/empty_stack")
             pix_stack = pix_stack.scaled(int(0.19*self.board_x), int(0.32*self.board_y), Qt.KeepAspectRatio)
             self.layout_tas.itemAt(stack_i).widget().setPixmap(pix_stack)
         self.layout_tas.setSpacing(int(self.board_x*0.011))
-        self.layout_tas.setContentsMargins(int(self.board_x*0.143), int(self.board_y*0.14), int(self.board_x*0.143), int(self.board_y*0.0))
+        self.layout_tas.setContentsMargins(int(self.board_x*0.143), int(self.board_y*0.0), int(self.board_x*0.143), int(self.board_y*0.0))
 
         # On affiche les indices
         for stack_i in range(self.layout_clue.count()):
@@ -338,7 +342,7 @@ class Widget_board(QWidget):
             pix_clue = pix_clue.scaled(int(self.board_x*0.035), int(self.board_x*0.035), Qt.KeepAspectRatio)
             self.layout_clue.itemAt(stack_i).widget().setPixmap(pix_clue)
         self.layout_clue.setSpacing(int(self.board_x*0.013))
-        self.layout_clue.setContentsMargins(int(self.board_x*0.292), int(self.board_y*0.11), int(self.board_x*0.292), int(self.board_y*0.0))
+        self.layout_clue.setContentsMargins(int(self.board_x*0.292), int(self.board_y*0.0), int(self.board_x*0.292), int(self.board_y*0.0))
 
         # On affiche les elements du dpd
         for dpd_i in range(self.layout_dpd.count()):
@@ -346,7 +350,7 @@ class Widget_board(QWidget):
             pix_dpd = pix_dpd.scaled(int(0.19*self.board_x), int(0.15*self.board_y), Qt.KeepAspectRatio)
             self.layout_dpd.itemAt(dpd_i).widget().setIcon(QIcon(pix_dpd))
         self.layout_dpd.setSpacing(int(self.board_x*0.011))
-        self.layout_dpd.setContentsMargins(int(self.board_x*0.22), int(self.board_y*0.0), int(self.board_x*0.22), int(self.board_y*0.005))
+        self.layout_dpd.setContentsMargins(int(self.board_x*0.22), int(self.board_y*0.0), int(self.board_x*0.22), int(self.board_y*0.000))
 
 
 
