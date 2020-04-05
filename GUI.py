@@ -265,26 +265,27 @@ class Widget_board(QWidget):
 
         # On definit le layout principal
         self.layout_board = QVBoxLayout()
+        self.layout_board.setSpacing(0)
 
         # On créé le layout pour les erreurs commises
         self.layout_error = QHBoxLayout()
         self.wid_error = QWidget()
         self.wid_error.setLayout(self.layout_error)
-        self.layout_board.addWidget(self.wid_error, 1000)
+        self.layout_board.addWidget(self.wid_error, 1641)
 
         # On affiche les tas a remplir
         self.img_label.setLayout(self.layout_board)
         self.layout_tas = QHBoxLayout()
         self.wid_tas = QWidget()
         self.wid_tas.setLayout(self.layout_tas)
-        self.layout_board.addWidget(self.wid_tas, 3000)
+        self.layout_board.addWidget(self.wid_tas, 2052)
 
         # On affiche les indices
         self.layout_clue = QHBoxLayout()
         self.wid_clues = QWidget()
         self.wid_clues.setLayout(self.layout_clue)
         # self.layout_board.addWidget(self.wid_clues)
-        self.layout_board.addWidget(self.wid_clues, 1000)
+        self.layout_board.addWidget(self.wid_clues, 1425)
 
         # On affiche la pioche, la carte jouee et la defausse
         self.wid_draw_play_disc = QWidget()
@@ -297,7 +298,7 @@ class Widget_board(QWidget):
         self.layout_dpd.addWidget(self.wid_pioche)
         self.layout_dpd.addWidget(self.wid_play_card)
         self.layout_dpd.addWidget(self.wid_dism_stack)
-        self.layout_board.addWidget(self.wid_draw_play_disc, 1500)
+        self.layout_board.addWidget(self.wid_draw_play_disc, 1378)
 
         self.resize_board()
 
@@ -309,10 +310,11 @@ class Widget_board(QWidget):
         ratio_y = 1
         p = self.board_pixmap.scaled(int(ratio_x*res_x), int(ratio_y*res_y), Qt.KeepAspectRatio)
         self.img_label.setPixmap(p)
-        self.img_label.setStyleSheet("QLabel {border-style: outset; border-width: 3px;}")
+        # self.img_label.setStyleSheet("QLabel {border-style: outset; border-width: 3px;}")
 
         # self.img_label.resize(p.rect().size())
         self.img_label.setFixedHeight(p.rect().size().height())
+        self.img_label.setFixedWidth(p.rect().size().width())
 
         print("Img_label : " + str(self.img_label.width()) + " " + str(self.img_label.height()))
         print("p : " + str(p.width()) + " " + str(p.height()))
@@ -324,10 +326,11 @@ class Widget_board(QWidget):
             pix_error = QPixmap("images/token/token_error")
             pix_error = pix_error.scaled(int(self.board_x*0.035), int(self.board_x*0.035), Qt.KeepAspectRatio)
             self.layout_error.itemAt(error_i).widget().setPixmap(pix_error)
-        self.layout_error.setSpacing(int(0.005 * self.board_x))
-        self.layout_error.setContentsMargins(int(0.412 * self.board_x), int(0.0 * self.board_y),
-                                             int(0.412 * self.board_x), int(0.0 * self.board_y))
-        
+            self.layout_error.itemAt(error_i).widget().setFixedWidth(pix_error.rect().size().width())
+        # self.layout_error.setSpacing(int(0.015 * self.board_x))
+        self.layout_error.setContentsMargins(int(0.397 * self.board_x), int(150/6496 * self.board_y),
+                                             int(0.412 * self.board_x), int(1116/6496* self.board_y))
+
         # On affiche les tas a remplir
         for stack_i in range(self.layout_tas.count()):
             pix_stack = QPixmap("images/empty_stack")
@@ -342,15 +345,18 @@ class Widget_board(QWidget):
             pix_clue = pix_clue.scaled(int(self.board_x*0.035), int(self.board_x*0.035), Qt.KeepAspectRatio)
             self.layout_clue.itemAt(stack_i).widget().setPixmap(pix_clue)
         self.layout_clue.setSpacing(int(self.board_x*0.013))
-        self.layout_clue.setContentsMargins(int(self.board_x*0.292), int(self.board_y*0.0), int(self.board_x*0.292), int(self.board_y*0.0))
+        self.layout_clue.setContentsMargins(int(self.board_x*0.292), int(724/6496*self.board_y), int(self.board_x*0.292), int(432/6496*self.board_y))
 
         # On affiche les elements du dpd
         for dpd_i in range(self.layout_dpd.count()):
             pix_dpd = QPixmap("images/hanabi_background_card") # TODO a remplacer par naught
-            pix_dpd = pix_dpd.scaled(int(0.19*self.board_x), int(0.15*self.board_y), Qt.KeepAspectRatio)
+            pix_dpd = pix_dpd.scaled(int(0.15*self.board_x), int(0.15*self.board_y), Qt.KeepAspectRatio)
             self.layout_dpd.itemAt(dpd_i).widget().setIcon(QIcon(pix_dpd))
-        self.layout_dpd.setSpacing(int(self.board_x*0.011))
-        self.layout_dpd.setContentsMargins(int(self.board_x*0.22), int(self.board_y*0.0), int(self.board_x*0.22), int(self.board_y*0.000))
+            self.layout_dpd.itemAt(dpd_i).widget().setFixedSize(pix_dpd.size())
+            self.layout_dpd.itemAt(dpd_i).widget().setStyleSheet("QCarte {border-style: outset; border-width: 3px;}")
+        self.layout_dpd.setSpacing(int(self.board_x*0.01))
+        lat_sp = 0.19
+        self.layout_dpd.setContentsMargins(int(lat_sp*self.board_x), int(0.011*self.board_y), int(lat_sp*0.992*self.board_x), int(279/6496*self.board_y))
 
 
 
@@ -396,7 +402,7 @@ class Widget_board(QWidget):
         # On affiche les piles de pioche, la carte jouee et la defausse
         # TODO ajouter la carte jouee
         self.wid_pioche = QCarte()
-        self.wid_pioche.setText(str(len(board.draw_list.card_list)))
+        # self.wid_pioche.setText(str(len(board.draw_list.card_list)))
         self.layout_dpd.addWidget(self.wid_pioche)
         self.wid_play_card = QCarte()
         self.layout_dpd.addWidget(self.wid_play_card)
