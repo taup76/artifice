@@ -13,19 +13,22 @@ class Card:
             else:
                 self.value = 0
             self.selected = False
+            self.revealed = ""  # note about w
         else:
             self.from_dic(dic)
+
 
     def to_string(self):
         return self.color + '' + str(self.value)
 
     def to_dic(self):
-        return {"color": self.color, "value": self.value, "selected": self.selected}
+        return {"color": self.color, "value": self.value, "selected": self.selected, "revealed": self.revealed}
 
     def from_dic(self, dic):
         self.color = dic["color"]
         self.value = dic["value"]
         self.selected = dic["selected"]
+        self.revealed = dic["revealed"]
 
 
 class Stack:
@@ -72,8 +75,8 @@ class Board:
             self.stack_dic = {'r': Stack(), 'b': Stack(), 'y': Stack(), 'g': Stack(), 'w': Stack()}
             self.draw_list = Stack()
             self.discard_list = Stack()
-            self.clues = 6
-            self.miss = 3
+            self.clues = 8
+            self.miss = 0
             # self.init_draw()
         else:
             self.stack_dic = {}
@@ -145,6 +148,15 @@ class Board:
             # otherwise, discard card and add miss counter
             self.discard_list.append(card)
             self.take_miss()
+
+    def count_score(self):
+        count_score = 0
+        for stack in self.stack_dic:
+            count_score += len(stack.card_list)
+        return count_score
+
+    def discard_empty(self):
+        return len(self.discard_list.card_list) == 0
 
 
 class Player:
@@ -227,15 +239,72 @@ class Team:
         for key in dic.keys():
             self.player_dic[key] = Player(key, dic[key])
 
+
+class Turn:
+
+    def __init__(self, board, team):
+        self.turn_count = 0
+        self.last_turn = 0
+        self.current_player = None
+        self.endgame_message = None
+        self.board = board
+        self.team = team
+
+    def to_dic(self):
+        return {"turn_count": self.turn_count,
+                "current_player": self.current_player,
+                "endgame_message": self.endgame_message}
+
+    def next_turn(self):
+        # increment turn
+        self.turn_count += 1
+        # next player
+        player_names = sorted(self.team.player_dic.keys)
+        self.current_player = player_names[self.turn_count % len(player_names)]
+        # if 3 errors
+        if self.board.miss == 3:
+            self.turn_count = 0
+            self.endgame_message = "Vous avez perdu !"
+            return
+        # if all stacks are filled
+        if self.board.count_score() == 25:
+            self.turn_count = 0
+            self.endgame_message = "Vous avez gagné ! \n" \
+                                  + " Légendaire, petits et grands sans voix, des étoiles dans les yeux"
+            return
+        # if stack is empty, each player has one extra turn
+        if self.board.discard_empty() and self.last_turn == 0:
+            self.last_turn = self.turn_count + len(player_names)
+            return
+        # if stack empty and last turn has been reached
+        if self.board.discard_empty() and self.turn_count > self.last_turn:
+            self.turn_count = 0
+            score = self.board.count_score()
+            if score <= 5:
+                self.endgame_message = "Partie terminée ! \n Horrible, huées de la foule..."
+            elif score <= 10:
+                self.endgame_message = "Partie terminée ! \n Médiocre, à peine quelques applaudissements."
+            elif score <= 15:
+                self.endgame_message = "Partie terminée ! \n Honorable, mais ne restera pas dans les mémoires..."
+            elif score <= 20:
+                self.endgame_message = "Partie terminée ! \n Excellente, ravit la foule"
+            elif score <= 25:
+                self.endgame_message = "Partie terminée ! \n Extraordinaire, restera gravée dans les mémoires !"
+            return
+
 class Game:
+
     def __init__(self):
         self.is_init = False
         self.is_started = False
         self.team = None
         self.board = None
+        self.turn = None
 
     def to_dic(self):
-        return {"board": self.board.to_dic(), "team": self.team.to_dic()}
+        return {"board": self.board.to_dic(),
+                "team": self.team.to_dic(),
+                "turn": self.turn.to_dic()}
 
     def init_game(self):
         if self.is_init:
@@ -243,6 +312,7 @@ class Game:
 
         self.board = Board()
         self.team = Team()
+        self.turn = Turn(self.board, self.team)
         self.is_init = True
         return ""
 
@@ -265,6 +335,10 @@ class Game:
         self.board.init_draw()
         self.team.init_hands(self.board)
         self.is_started = True
+
+        # start first turn
+        self.turn.next_turn()
+
         return ""
 
     def finish_game(self):
@@ -272,6 +346,7 @@ class Game:
         self.is_started = False
         self.team = None
         self.board = None
+        self.turn = None
         return ""
 
     def get_player_and_card_idx(self, player_dic):
@@ -280,6 +355,9 @@ class Game:
         # create player from received message
         print(player_dic)
         rcvd_player = Player(dic=player_dic)
+
+        if rcvd_player.name != self.turn.current_player:
+            return "This is not your turn"
 
         # look for selected index
         selected_card_idx = -1
@@ -307,10 +385,18 @@ class Game:
             return error_str
 
         current_player.play_card(self.board, selected_card_idx)
-
+        self.turn.next_turn()
         return ""
 
-    def give_clue(self, username, card_idx_list):
+    def give_clue(self, player_dic, current_player):
+        if current_player != self.turn.current_player:
+            return "This is not your turn"
+        target_player, selected_card_idx, error_str = self.get_player_and_card_idx(player_dic)
+        if len(error_str) > 0:
+            return error_str
+        target_player.receive_clue()
+        self.board.take_clue(selected_card_idx)
+        self.turn.next_turn()
         return ""
 
     def discard_card(self, player_dic):
@@ -318,5 +404,7 @@ class Game:
         if len(error_str) > 0:
             return error_str
         current_player.discard_card(self.board, selected_card_idx)
+
+        self.turn.next_turn()
 
         return ""
