@@ -4,8 +4,14 @@ import random
 class Card:
     def __init__(self, color=None, value=None, dic=None):
         if dic is None:
-            self.color = color
-            self.value = value
+            if color is not None:
+                self.color = color
+            else:
+                self.color = 'N'
+            if value is not None:
+                self.value = value
+            else:
+                self.value = 0
             self.selected = False
         else:
             self.from_dic(dic)
@@ -66,7 +72,7 @@ class Board:
             self.stack_dic = {'r': Stack(), 'b': Stack(), 'y': Stack(), 'g': Stack(), 'w': Stack()}
             self.draw_list = Stack()
             self.discard_list = Stack()
-            self.clues = 8
+            self.clues = 6
             self.miss = 3
             # self.init_draw()
         else:
