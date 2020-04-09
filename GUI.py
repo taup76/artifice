@@ -3,7 +3,7 @@ from PyQt5.QtWidgets import QApplication, QWidget, QPushButton, QGridLayout, QFo
 from PyQt5.QtGui import *
 from PyQt5.Qt import *
 from PyQt5.QtCore import QObject,pyqtSignal
-from PyQt5.QtGui import QScreen
+from PyQt5.QtCore import QThread
 import game as gm
 import  client
 
@@ -78,12 +78,15 @@ class Fenetre(QWidget):
         self.but_play.clicked.connect(self.handle_but_play)
         self.but_dismiss = QPushButton("Defausser")
         self.but_dismiss.clicked.connect(self.handle_dismiss)
+        self.but_give_clue = QPushButton("Renseigner")
+        self.but_give_clue.clicked.connect(self.handle_give_clue)
         self.layout_actions = QHBoxLayout()
         self.layout_actions.setContentsMargins(int(self.res_x/5), int(self.res_y/5),
                                                  int(self.res_x/5), int(self.res_y/5))
         self.wid_actions.setLayout(self.layout_actions)
         self.layout_actions.addWidget(self.but_play)
         self.layout_actions.addWidget(self.but_dismiss)
+        self.layout_actions.addWidget(self.but_give_clue)
 
         # On remplit le layout principal
         self.layout_principal.addWidget(self.wid_board, 500)
@@ -97,6 +100,7 @@ class Fenetre(QWidget):
         self.layout_principal.addWidget(self.wid_right_panel, 500)
         self.setLayout(self.layout_principal)
         self.setWindowTitle("Artifice")
+
 
     def draw_game(self):
         print("Draw user : " + self.username)
@@ -131,6 +135,12 @@ class Fenetre(QWidget):
     def handle_ok_join(self):
         self.username = self.popup_join.field_joueur.text()
         self.client = client.Client(self.username)
+        self.sub_sock_thread = QThread()
+        self.sub_listen = client.SubListener(self.client.context)
+        self.sub_listen.moveToThread(self.sub_sock_thread)
+        self.sub_sock_thread.started(self.sub_listen.loop)
+        self.sub_listen.message.connect(self.handle_message_sub)
+        self.sub_sock_thread.start()
         dic_cmd = {'command':'join_game', 'username': self.username}
         message_new_game = self.client.make_message(dic_cmd)
         self.board = gm.Board(message_new_game['board'])
@@ -138,6 +148,11 @@ class Fenetre(QWidget):
         self.draw_game()
         self.popup_join.close()
         self.wid_hands.clear_hands()
+
+    def handle_message_sub(self,game_dic):
+        self.team = gm.Team(game_dic['team'])
+        self.board = gm.Board(game_dic['board'])
+        self.draw_game()
 
     def handle_but_play(self):
         print("On joue une carte")
@@ -147,7 +162,25 @@ class Fenetre(QWidget):
         print(game_dic)
         self.team = gm.Team(game_dic['team'])
         self.board = gm.Board(game_dic['board'])
+        self.turn = game_dic['turn']
+        print(self.turn['endgame_message'])
+        if self.turn['endgame_message'] is not None:
+            print('PEERDUU')
+            msg = QMessageBox()
+            msg.setIcon(QMessageBox.Information)
+            msg.setText(self.turn['endgame_message'])
+            msg.setInformativeText("Nombre de tour : " + str(int((self.turn["turn_count"]-1)/len(self.team.player_dic))))
+            msg.setWindowTitle("Fin de la partie")
+            # msg.setDetailedText("The details are as follows:")
+            msg.setStandardButtons(QMessageBox.Ok)
+            msg.buttonClicked.connect(self.end_button)
+            msg.exec()
         self.draw_game()
+
+    def end_button(self):
+        print("Partie terminée")
+        self.but_play.setEnabled(False)
+        self.but_dismiss.setEnabled(False)
 
     def handle_dismiss(self):
         print("On défausse une carte")
@@ -158,6 +191,14 @@ class Fenetre(QWidget):
         self.board = gm.Board(game_dic['board'])
         self.draw_game()
 
+    def handle_give_clue(self): #TODO
+        print("On donne une information")
+        dic_cmd = {'command': 'give_clue', 'player': self.team.player_dic[self.username].to_dic()}
+        game_dic = self.client.make_message(dic_cmd)
+        print(game_dic)
+        self.team = gm.Team(game_dic['team'])
+        self.board = gm.Board(game_dic['board'])
+        self.draw_game()
 
 # Definition de la classe Qcarte ---------------------------
 class QCarte(QPushButton):

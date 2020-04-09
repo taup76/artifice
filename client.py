@@ -4,15 +4,17 @@
 #
 
 import zmq
+from PyQt5 import QtCore
 import json
 
 
 class Client:
-    def __init__(self, joueur = "", socket = zmq.Context(), game_dic = {}):
-        self.socket = socket
+    def __init__(self, joueur="", game_dic={}):
+        self.context = zmq.Context()
         self.game_dic = game_dic
         self.ip = "localhost"
         self.port = 5555
+        self.subport = 6666
         self.joueur = joueur
         self.connect_socket()
 
@@ -22,16 +24,11 @@ class Client:
 
     def connect_socket(self):
         print("Connecting to hello world server…")
-        context = zmq.Context()
         #  Socket to talk to server
-        self.socket = context.socket(zmq.REQ)
+        self.socket = self.context.socket(zmq.REQ)
         print("tcp://" + self.ip + ":" + str(self.port))
         self.socket.connect("tcp://" + self.ip + ':' + str(self.port))
         print("Sending request")
-        # self.socket.send_string(self.joueur)
-        # self.message = self.socket.recv() # Mettre un watchdog
-        # print("Received reply [ %s ]" % self.message)
-        # self.game_dic = json.loads(self.message)
 
     def make_message(self, dic_command): # commande de la forme {'command' : 'start_game' ; 'params' : ['param1', 'param2', ...]
         mes_json = "{}"
@@ -45,6 +42,20 @@ class Client:
             print(self.message)
         else:
             print("Format inconnu de commande")
-
         return self.message
+
+
+class SubListener(QtCore.QObject):
+    message = QtCore.pyqtSignal(str)
+
+    def __init__(self, context):
+        QtCore.QObject.__init__(self)
+        self.sub_socket = context.socket(zmq.SUB)
+        self.sub_socket.connect("tcp://" + self.ip + ':' + str(self.subport))
+        self.running = True
+
+    def loop(self):
+        while self.running:
+            sub_message = self.sub_socket.recv_json()
+            self.message.emit(sub_message)
 

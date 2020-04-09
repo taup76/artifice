@@ -137,7 +137,7 @@ class Board:
             self.clues = self.clues - 1
 
     def take_miss(self):
-        self.miss = self.miss - 1
+        self.miss = self.miss + 1
 
     def play_card(self, card):
         target_stack = self.stack_dic[card.color]
@@ -152,11 +152,11 @@ class Board:
     def count_score(self):
         count_score = 0
         for stack in self.stack_dic:
-            count_score += len(stack.card_list)
+            count_score += len(self.stack_dic[stack].card_list)
         return count_score
 
-    def discard_empty(self):
-        return len(self.discard_list.card_list) == 0
+    def draw_empty(self):
+        return len(self.draw_list.card_list) == 0
 
 
 class Player:
@@ -259,26 +259,23 @@ class Turn:
         # increment turn
         self.turn_count += 1
         # next player
-        player_names = sorted(self.team.player_dic.keys)
+        player_names = sorted(self.team.player_dic.keys())
         self.current_player = player_names[self.turn_count % len(player_names)]
         # if 3 errors
         if self.board.miss == 3:
-            self.turn_count = 0
             self.endgame_message = "Vous avez perdu !"
             return
         # if all stacks are filled
         if self.board.count_score() == 25:
-            self.turn_count = 0
             self.endgame_message = "Vous avez gagné ! \n" \
-                                  + " Légendaire, petits et grands sans voix, des étoiles dans les yeux"
+                                    + " Légendaire, petits et grands sans voix, des étoiles dans les yeux"
             return
         # if stack is empty, each player has one extra turn
-        if self.board.discard_empty() and self.last_turn == 0:
+        if self.board.draw_empty() and self.last_turn == 0:
             self.last_turn = self.turn_count + len(player_names)
             return
         # if stack empty and last turn has been reached
-        if self.board.discard_empty() and self.turn_count > self.last_turn:
-            self.turn_count = 0
+        if self.board.draw_empty() and self.turn_count > self.last_turn:
             score = self.board.count_score()
             if score <= 5:
                 self.endgame_message = "Partie terminée ! \n Horrible, huées de la foule..."
@@ -357,7 +354,7 @@ class Game:
         rcvd_player = Player(dic=player_dic)
 
         if rcvd_player.name != self.turn.current_player:
-            return "This is not your turn"
+            return "", "", "This is not your turn"
 
         # look for selected index
         selected_card_idx = -1
