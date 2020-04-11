@@ -42,18 +42,12 @@ class Fenetre(QWidget):
         self.resize(self.res_x, self.res_y)
         self.board = gm.Board()
         self.team = gm.Team()
-        self.turn = gm.Turn(self.board, self.team)
+        self.turn = {}
         self.username = ""
 
         # On affiche les mains des joueurs
-        # self.list_player = self.team.player_dic.keys()
         self.wid_hands = Widget_hands()
         self.wid_hands.card_clicked.connect(self.handle_card_clicked)
-        # empty_player = gm.Player()
-        # for i in range(5):
-        #     empty_player.append(gm.Card())
-        # self.team.add_player(empty_player)
-        # self.wid_hands.add_team(self.team, "")
 
         self.layout_principal = QHBoxLayout()
 
@@ -107,7 +101,12 @@ class Fenetre(QWidget):
 
     def draw_game(self):
         # print("Draw user : " + self.username)
-        self.wid_hands.add_team(self.team, self.turn.current_player, self.username)
+        print("draw 1")
+        print(self.username)
+        # print("Current " + self.turn.current_player)
+        if self.turn['current_player'] is not None:
+            self.wid_hands.add_team(self.team, self.username, self.turn['current_player'])
+        print("draw 2")
         # print("draw")
         # print(self.board.to_dic())
         self.wid_board.add_board(self.board)
@@ -119,6 +118,7 @@ class Fenetre(QWidget):
         # game_dic = json.loads(message)
         self.team = gm.Team(message['team'])
         self.board = gm.Board(message['board'])
+        self.turn = message['turn']
 
     def open_popup_join(self):
         self.popup_join = Popup_join()
@@ -128,8 +128,9 @@ class Fenetre(QWidget):
     def handle_launch(self):
         dic_cmd = {'command':'start_game', 'username': self.username}
         game_dic = self.client.make_message(dic_cmd)
-        # self.team = gm.Team(game_dic['team'])
-        # self.board = gm.Board(game_dic['board'])
+        self.team = gm.Team(game_dic['team'])
+        self.board = gm.Board(game_dic['board'])
+        self.turn = game_dic['turn']
         # print("Launch user : " + self.username)
         # self.wid_hands.add_team(self.team, self.username)
         # self.wid_board.add_board(self.board)
@@ -147,9 +148,6 @@ class Fenetre(QWidget):
         QTimer.singleShot(0, self.sub_sock_thread.start)
         dic_cmd = {'command':'join_game', 'username': self.username}
         message_new_game = self.client.make_message(dic_cmd)
-        # self.board = gm.Board(message_new_game['board'])
-        # self.team = gm.Team(message_new_game['team'])
-        # self.draw_game()
         self.popup_join.close()
         self.wid_hands.clear_hands()
 
@@ -160,7 +158,7 @@ class Fenetre(QWidget):
         self.team = gm.Team(game_dic['team'])
         self.board = gm.Board(game_dic['board'])
         print('tour 1')
-        self.turn = gm.Turn(self.board, self.team)
+        self.turn = game_dic['turn']
         print('tour 2')
         self.draw_game()
 
@@ -225,15 +223,17 @@ class QCarte(QPushButton):
         self.hidden = hidden
         if carte is None:
             path_to_im = 'images/hanabi_background_card.png'
+            self.selected = False
         else:
             if self.hidden:
                 path_to_im = "images/hidden.png"
             else:
                 path_to_im = "images/" + carte.to_string()
+            self.selected = carte.selected
         self.set_image(path_to_im)
         self.carte = carte
         self.isclickable = (carte is not None)
-        self.selected = False
+        # self.selected = False
         self.clicked.connect(self.on_click)
         self.image = path_to_im
         self.set_highlight()
@@ -340,13 +340,6 @@ class Widget_hands(QWidget):
             wid_carte.clicked.connect(self.card_clicked)
             layout_card.addWidget(wid_carte)
         self.layout_hands.addWidget(wid_hand)
-
-    # def card_selected(self):
-        # print("selected 1")
-        # dic_cmd = {'command':'card_selected', 'team': self.team.to_dic()}
-        # print("selected 2")
-        # message = self.client.make_message(dic_cmd)
-        # print("selected 3")
 
     def add_team(self, team, user, current_player):
         self.username = user
