@@ -278,15 +278,15 @@ class Turn:
         if self.board.draw_empty() and self.turn_count > self.last_turn:
             score = self.board.count_score()
             if score <= 5:
-                self.endgame_message = "Partie terminée ! \n Horrible, huées de la foule..."
+                self.endgame_message = "Score final " + str(score)+ "/25\n Horrible, huées de la foule..."
             elif score <= 10:
-                self.endgame_message = "Partie terminée ! \n Médiocre, à peine quelques applaudissements."
+                self.endgame_message = "Score final " + str(score)+ "/25\n Médiocre, à peine quelques applaudissements."
             elif score <= 15:
-                self.endgame_message = "Partie terminée ! \n Honorable, mais ne restera pas dans les mémoires..."
+                self.endgame_message = "Score final " + str(score)+ "/25\n Honorable, mais ne restera pas dans les mémoires..."
             elif score <= 20:
-                self.endgame_message = "Partie terminée ! \n Excellente, ravit la foule"
+                self.endgame_message = "Score final " + str(score)+ "/25\n Excellente, ravit la foule"
             elif score <= 25:
-                self.endgame_message = "Partie terminée ! \n Extraordinaire, restera gravée dans les mémoires !"
+                self.endgame_message = "Score final " + str(score)+ "/25\n Extraordinaire, restera gravée dans les mémoires !"
             return
 
 class Game:
@@ -405,3 +405,6 @@ class Game:
         self.turn.next_turn()
 
         return ""
+
+    def update_team(self, team_msg):
+        self.team = Team(team_msg)
