@@ -48,6 +48,7 @@ class Fenetre(QWidget):
         # On affiche les mains des joueurs
         # self.list_player = self.team.player_dic.keys()
         self.wid_hands = Widget_hands()
+        self.wid_hands.card_clicked.connect(self.handle_card_clicked)
         # empty_player = gm.Player()
         # for i in range(5):
         #     empty_player.append(gm.Card())
@@ -106,7 +107,7 @@ class Fenetre(QWidget):
 
     def draw_game(self):
         # print("Draw user : " + self.username)
-        self.wid_hands.add_team(self.team, self.turn, self.username)
+        self.wid_hands.add_team(self.team, self.turn.current_player, self.username)
         # print("draw")
         # print(self.board.to_dic())
         self.wid_board.add_board(self.board)
@@ -158,7 +159,9 @@ class Fenetre(QWidget):
         print(game_dic)
         self.team = gm.Team(game_dic['team'])
         self.board = gm.Board(game_dic['board'])
-        self.turn = gm.Turn(game_dic['turn'])
+        print('tour 1')
+        self.turn = gm.Turn(self.board, self.team)
+        print('tour 2')
         self.draw_game()
 
     def handle_but_play(self):
@@ -206,6 +209,12 @@ class Fenetre(QWidget):
         self.team = gm.Team(game_dic['team'])
         self.board = gm.Board(game_dic['board'])
         self.draw_game()
+
+    def handle_card_clicked(self):
+        dic_cmd = {'command': 'card_selected', 'team': self.team.to_dic()}
+        print("card clicked 1")
+        game_dic = self.client.make_message(dic_cmd)
+        print("card clicked 2")
 
 # Definition de la classe Qcarte ---------------------------
 class QCarte(QPushButton):
@@ -265,11 +274,6 @@ class QCarte(QPushButton):
                 self.carte.selected = True
                 self.setChecked(True)
                 self.set_highlight()
-                # self.setStyleSheet("border: 5px solid red")
-            # pixmap = QPixmap(path_to_im)
-            # pixmap = pixmap.scaled(220, 200)
-            # ButtonIcon = QIcon(pixmap)
-            # self.setIcon(ButtonIcon)
 
     def set_highlight(self):
         if self.selected:
@@ -280,6 +284,7 @@ class QCarte(QPushButton):
             self.setGraphicsEffect(effect)
         else:
             self.setGraphicsEffect(None)
+
 
 class Popup_join(QWidget):
     trigger = pyqtSignal()
@@ -298,6 +303,8 @@ class Popup_join(QWidget):
 
 
 class Widget_hands(QWidget):
+    card_clicked = pyqtSignal()
+
     def __init__(self, user = ""):
         QWidget.__init__(self)
         self.layout_hands = QVBoxLayout()
@@ -305,14 +312,14 @@ class Widget_hands(QWidget):
         self.username = user
         self.team = gm.Team()
 
-    def add_hand(self, player, turn, team):
+    def add_hand(self, player, current_player, team):
         self.team = team
         wid_hand = QWidget()
         layout_hand = QVBoxLayout()
         wid_hand.setLayout(layout_hand)
         layout_card = QHBoxLayout()
         wid_name = QLabel(player.name)
-        if player.name == turn.current_player:
+        if player.name == current_player:
             effect = QGraphicsDropShadowEffect()
             effect.setBlurRadius(20)
             effect.setOffset(0)
@@ -330,19 +337,22 @@ class Widget_hands(QWidget):
             wid_carte.pixmap = wid_carte.pixmap.scaled(int(scr_x/12), int(scr_x/12))
             wid_carte.setIcon(QIcon(wid_carte.pixmap))
             wid_carte.setFixedSize(wid_carte.pixmap.size())
-            wid_carte.clicked.connect(self.card_selected)
+            wid_carte.clicked.connect(self.card_clicked)
             layout_card.addWidget(wid_carte)
         self.layout_hands.addWidget(wid_hand)
 
-    def card_selected(self):
-        dic_cmd = {'command':'card_selected', 'team': self.team}
-        message = self.client.make_message(dic_cmd)
+    # def card_selected(self):
+        # print("selected 1")
+        # dic_cmd = {'command':'card_selected', 'team': self.team.to_dic()}
+        # print("selected 2")
+        # message = self.client.make_message(dic_cmd)
+        # print("selected 3")
 
-    def add_team(self, team, user, turn):
+    def add_team(self, team, user, current_player):
         self.username = user
         self.clear_hands()
         for player_name in team.player_dic.keys():
-            self.add_hand(team.player_dic[player_name], turn, team)
+            self.add_hand(team.player_dic[player_name], current_player, team)
 
     def clear_hands(self):
         for i in reversed(range(self.layout_hands.count())):
