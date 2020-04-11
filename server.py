@@ -21,6 +21,8 @@ def parse_msg(msg, game):
         result_msg = game.give_clue(msg["player"], msg["current_player"])
     elif command == 'discard_card':
         result_msg = game.discard_card(msg["player"])
+    elif command == 'card_selected':
+        result_msg = game.update_team(msg["team"])
     else:
         result_msg = "Fonction serveur non definie"
 
