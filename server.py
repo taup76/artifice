@@ -37,7 +37,7 @@ def main():
 
     # open publisher on port 6666
     pub_socket = context.socket(zmq.PUB)
-    pub_socket.bind("tcp://*:6666")
+    pub_socket.bind("tcp://*:5556")
 
     # create a game
     game = Game()
@@ -63,12 +63,11 @@ def main():
         game_dic = parse_msg(message, game)
         print(game_dic)
 
-        # print(json_str)
         #  Send reply back to client
         socket.send_json(game_dic)
 
         # publish game
-        pub_socket.send_json(game_dic)
+        pub_socket.send_string("%s %s" % ("message", json.dumps(game_dic)))
 
 
 if __name__ == "__main__":

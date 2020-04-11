@@ -5,7 +5,8 @@ from PyQt5.Qt import *
 from PyQt5.QtCore import QObject,pyqtSignal
 from PyQt5.QtCore import QThread
 import game as gm
-import  client
+import client
+import json
 
 # non blocking subcriber
 # https://stackoverflow.com/questions/26012132/zero-mq-socket-recv-call-is-blocking
@@ -103,10 +104,10 @@ class Fenetre(QWidget):
 
 
     def draw_game(self):
-        print("Draw user : " + self.username)
+        # print("Draw user : " + self.username)
         self.wid_hands.add_team(self.team, self.username)
-        print("draw")
-        print(self.board.to_dic())
+        # print("draw")
+        # print(self.board.to_dic())
         self.wid_board.add_board(self.board)
 
     def join_game(self):
@@ -125,11 +126,11 @@ class Fenetre(QWidget):
     def handle_launch(self):
         dic_cmd = {'command':'start_game', 'username': self.username}
         game_dic = self.client.make_message(dic_cmd)
-        self.team = gm.Team(game_dic['team'])
-        self.board = gm.Board(game_dic['board'])
-        print("Launch user : " + self.username)
-        self.wid_hands.add_team(self.team, self.username)
-        self.wid_board.add_board(self.board)
+        # self.team = gm.Team(game_dic['team'])
+        # self.board = gm.Board(game_dic['board'])
+        # print("Launch user : " + self.username)
+        # self.wid_hands.add_team(self.team, self.username)
+        # self.wid_board.add_board(self.board)
         print("Initialisation du jeu OK")
 
     def handle_ok_join(self):
@@ -138,18 +139,22 @@ class Fenetre(QWidget):
         self.sub_sock_thread = QThread()
         self.sub_listen = client.SubListener(self.client.context)
         self.sub_listen.moveToThread(self.sub_sock_thread)
-        self.sub_sock_thread.started(self.sub_listen.loop)
+        self.sub_sock_thread.started.connect(self.sub_listen.loop)
         self.sub_listen.message.connect(self.handle_message_sub)
-        self.sub_sock_thread.start()
+        # self.sub_sock_thread.start()
+        QTimer.singleShot(0, self.sub_sock_thread.start)
         dic_cmd = {'command':'join_game', 'username': self.username}
         message_new_game = self.client.make_message(dic_cmd)
-        self.board = gm.Board(message_new_game['board'])
-        self.team = gm.Team(message_new_game['team'])
-        self.draw_game()
+        # self.board = gm.Board(message_new_game['board'])
+        # self.team = gm.Team(message_new_game['team'])
+        # self.draw_game()
         self.popup_join.close()
         self.wid_hands.clear_hands()
 
     def handle_message_sub(self,game_dic):
+        print("Message du publisher")
+        game_dic = json.loads(game_dic)
+        print(game_dic)
         self.team = gm.Team(game_dic['team'])
         self.board = gm.Board(game_dic['board'])
         self.draw_game()
@@ -181,6 +186,7 @@ class Fenetre(QWidget):
         print("Partie terminée")
         self.but_play.setEnabled(False)
         self.but_dismiss.setEnabled(False)
+        self.but_give_clue.setEnabled(False)
 
     def handle_dismiss(self):
         print("On défausse une carte")
