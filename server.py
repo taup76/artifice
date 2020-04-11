@@ -17,7 +17,7 @@ def parse_msg(msg, game):
     elif command == 'play_card':
         result_msg = game.play_card(msg["player"])
     elif command == 'give_clue':
-        result_msg = game.give_clue(msg["player"], msg["current_player"])
+        result_msg = game.give_clue(msg["current_player"])
     elif command == 'discard_card':
         result_msg = game.discard_card(msg["player"])
     elif command == 'card_selected':

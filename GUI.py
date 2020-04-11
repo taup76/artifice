@@ -199,7 +199,7 @@ class Fenetre(QWidget):
 
     def handle_give_clue(self): #TODO
         print("On donne une information")
-        dic_cmd = {'command': 'give_clue', 'player': self.team.player_dic[self.username].to_dic()}
+        dic_cmd = {'command': 'give_clue', 'current_player': self.username}
         game_dic = self.client.make_message(dic_cmd)
         print(game_dic)
         self.team = gm.Team(game_dic['team'])
@@ -465,7 +465,7 @@ class Widget_board(QWidget):
             self.layout_error.addWidget(lab_error)
 
         # On affiche les stacks
-        for stack_key in board.stack_dic.keys():
+        for stack_key in ['r', 'y', 'g', 'w', 'b']:
             stack = board.stack_dic[stack_key]
             lab_stack = QLabel()
             if len(stack.card_list) > 0:

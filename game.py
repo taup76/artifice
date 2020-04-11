@@ -13,7 +13,7 @@ class Card:
             else:
                 self.value = 0
             self.selected = False
-            self.revealed = ""  # note about w
+            self.revealed = 0  # note about w
         else:
             self.from_dic(dic)
 
@@ -53,6 +53,10 @@ class Stack:
 
     def shuffle(self):
         random.shuffle(self.card_list)
+
+    def unselect_all(self):
+        for card in self.card_list:
+            card.selected = False
 
     def to_array(self):
         array = []
@@ -209,6 +213,18 @@ class Player:
         board.add_clue()
         self.draw_card(board)
 
+    def receive_clue(self):
+        for card in self.card_list.card_list:
+            if card.selected:
+                print("REVEALED!!")
+                card.revealed = card.revealed + 1
+
+    def has_selected_card(self):
+        for card in self.card_list.card_list:
+            if card.selected:
+                return True
+        return False
+
 
 class Team:
     def __init__(self, dic=None):
@@ -228,6 +244,10 @@ class Team:
 
         for player in self.player_dic:
             self.player_dic[player].init_hand(board, nb_cards)
+
+    def unselect_all(self):
+        for player in self.player_dic:
+            self.player_dic[player].card_list.unselect_all()
 
     def to_dic(self):
         dic = {}
@@ -376,23 +396,40 @@ class Game:
 
         return current_player, selected_card_idx, error_msg
 
+    def find_target_player(self):
+        target_player = Player()
+        error_str = ""
+        for player_name in self.team.player_dic:
+            player = self.team.player_dic[player_name]
+            if player.has_selected_card():
+                target_player = player
+                break
+        if target_player.name is None:
+            error_str = "No card selected"
+
+        return target_player, error_str
+
     def play_card(self, player_dic):
         current_player, selected_card_idx, error_str = self.get_player_and_card_idx(player_dic)
         if len(error_str) > 0:
             return error_str
 
         current_player.play_card(self.board, selected_card_idx)
+        self.team.unselect_all()
         self.turn.next_turn()
         return ""
 
-    def give_clue(self, player_dic, current_player):
+    def give_clue(self, current_player):
         if current_player != self.turn.current_player:
             return "This is not your turn"
-        target_player, selected_card_idx, error_str = self.get_player_and_card_idx(player_dic)
+
+        # find player with selected cards
+        target_player, error_str = self.find_target_player()
         if len(error_str) > 0:
             return error_str
         target_player.receive_clue()
-        self.board.take_clue(selected_card_idx)
+        self.board.take_clue()
+        self.team.unselect_all()
         self.turn.next_turn()
         return ""
 
@@ -402,6 +439,7 @@ class Game:
             return error_str
         current_player.discard_card(self.board, selected_card_idx)
 
+        self.team.unselect_all()
         self.turn.next_turn()
 
         return ""
