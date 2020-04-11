@@ -42,6 +42,7 @@ class Fenetre(QWidget):
         self.resize(self.res_x, self.res_y)
         self.board = gm.Board()
         self.team = gm.Team()
+        self.turn = gm.Turn(self.board, self.team)
         self.username = ""
 
         # On affiche les mains des joueurs
@@ -105,7 +106,7 @@ class Fenetre(QWidget):
 
     def draw_game(self):
         # print("Draw user : " + self.username)
-        self.wid_hands.add_team(self.team, self.username)
+        self.wid_hands.add_team(self.team, self.turn, self.username)
         # print("draw")
         # print(self.board.to_dic())
         self.wid_board.add_board(self.board)
@@ -157,6 +158,7 @@ class Fenetre(QWidget):
         print(game_dic)
         self.team = gm.Team(game_dic['team'])
         self.board = gm.Board(game_dic['board'])
+        self.turn = gm.Turn(game_dic['turn'])
         self.draw_game()
 
     def handle_but_play(self):
@@ -176,7 +178,6 @@ class Fenetre(QWidget):
             msg.setText(self.turn['endgame_message'])
             msg.setInformativeText("Nombre de tour : " + str(int((self.turn["turn_count"]-1)/len(self.team.player_dic))))
             msg.setWindowTitle("Fin de la partie")
-            # msg.setDetailedText("The details are as follows:")
             msg.setStandardButtons(QMessageBox.Ok)
             msg.buttonClicked.connect(self.end_button)
             msg.exec()
@@ -226,7 +227,7 @@ class QCarte(QPushButton):
         self.selected = False
         self.clicked.connect(self.on_click)
         self.image = path_to_im
-
+        self.set_highlight()
         self.setStyleSheet("QPushButton {border-style: outset; border-width: 0px;}")
 
     def __str__(self):
@@ -242,6 +243,7 @@ class QCarte(QPushButton):
         # self.setFixedSize(self.pixmap.size())
 
     def on_click(self):
+        mes_click_card = pyqtSignal(str)
         if self.isclickable:
             if self.selected:
                 if self.hidden:
@@ -252,7 +254,7 @@ class QCarte(QPushButton):
                 self.carte.selected = False
                 self.setChecked(False)
                 self.setStyleSheet("border: 0px solid red")
-                self.setGraphicsEffect(None)
+                self.set_highlight()
             else:
                 if self.hidden:
                     path_to_im = "images/small/hidden"
@@ -262,17 +264,22 @@ class QCarte(QPushButton):
                 self.selected = True
                 self.carte.selected = True
                 self.setChecked(True)
-                effect = QGraphicsDropShadowEffect()
-                effect.setBlurRadius(20)
-                effect.setOffset(0)
-                effect.setColor(Qt.black)
-                self.setGraphicsEffect(effect)
+                self.set_highlight()
                 # self.setStyleSheet("border: 5px solid red")
             # pixmap = QPixmap(path_to_im)
             # pixmap = pixmap.scaled(220, 200)
             # ButtonIcon = QIcon(pixmap)
             # self.setIcon(ButtonIcon)
 
+    def set_highlight(self):
+        if self.selected:
+            effect = QGraphicsDropShadowEffect()
+            effect.setBlurRadius(20)
+            effect.setOffset(0)
+            effect.setColor(Qt.black)
+            self.setGraphicsEffect(effect)
+        else:
+            self.setGraphicsEffect(None)
 
 class Popup_join(QWidget):
     trigger = pyqtSignal()
@@ -296,13 +303,21 @@ class Widget_hands(QWidget):
         self.layout_hands = QVBoxLayout()
         self.setLayout(self.layout_hands)
         self.username = user
+        self.team = gm.Team()
 
-    def add_hand(self, player):
+    def add_hand(self, player, turn, team):
+        self.team = team
         wid_hand = QWidget()
         layout_hand = QVBoxLayout()
         wid_hand.setLayout(layout_hand)
         layout_card = QHBoxLayout()
         wid_name = QLabel(player.name)
+        if player.name == turn.current_player:
+            effect = QGraphicsDropShadowEffect()
+            effect.setBlurRadius(20)
+            effect.setOffset(0)
+            effect.setColor(Qt.black)
+            wid_name.setGraphicsEffect(effect)
         layout_hand.addWidget(wid_name)
         wid_cards = QWidget()
         layout_hand.addWidget(wid_cards)
@@ -315,14 +330,19 @@ class Widget_hands(QWidget):
             wid_carte.pixmap = wid_carte.pixmap.scaled(int(scr_x/12), int(scr_x/12))
             wid_carte.setIcon(QIcon(wid_carte.pixmap))
             wid_carte.setFixedSize(wid_carte.pixmap.size())
+            wid_carte.clicked.connect(self.card_selected)
             layout_card.addWidget(wid_carte)
         self.layout_hands.addWidget(wid_hand)
 
-    def add_team(self, team, user):
+    def card_selected(self):
+        dic_cmd = {'command':'card_selected', 'team': self.team}
+        message = self.client.make_message(dic_cmd)
+
+    def add_team(self, team, user, turn):
         self.username = user
         self.clear_hands()
         for player_name in team.player_dic.keys():
-            self.add_hand(team.player_dic[player_name])
+            self.add_hand(team.player_dic[player_name], turn, team)
 
     def clear_hands(self):
         for i in reversed(range(self.layout_hands.count())):
