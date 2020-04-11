@@ -12,6 +12,7 @@ class Client:
     def __init__(self, joueur="", game_dic={}):
         self.context = zmq.Context()
         self.game_dic = game_dic
+        # self.ip = "192.168.1.98"
         self.ip = "localhost"
         self.port = 5555
         self.joueur = joueur
@@ -51,6 +52,7 @@ class SubListener(QtCore.QObject):
         # self.context = zmq.Context()
         QtCore.QObject.__init__(self)
         self.subport = 5556
+        # self.ip = "192.168.1.98"
         self.ip = "localhost"
         self.sub_socket = context.socket(zmq.SUB)
         self.sub_socket.connect("tcp://" + self.ip + ':' + str(self.subport))
@@ -59,9 +61,7 @@ class SubListener(QtCore.QObject):
         self.running = True
 
     def loop(self):
-        print('aaaaaaaaaaaaaaaa')
         while self.running:
-            print("oooooooooooooooooooooo")
             sub_message = self.sub_socket.recv_string()
             print(sub_message)
             sub_message = sub_message.replace("message ", "")

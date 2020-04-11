@@ -42,16 +42,12 @@ class Fenetre(QWidget):
         self.resize(self.res_x, self.res_y)
         self.board = gm.Board()
         self.team = gm.Team()
+        self.turn = {}
         self.username = ""
 
         # On affiche les mains des joueurs
-        # self.list_player = self.team.player_dic.keys()
         self.wid_hands = Widget_hands()
-        # empty_player = gm.Player()
-        # for i in range(5):
-        #     empty_player.append(gm.Card())
-        # self.team.add_player(empty_player)
-        # self.wid_hands.add_team(self.team, "")
+        self.wid_hands.card_clicked.connect(self.handle_card_clicked)
 
         self.layout_principal = QHBoxLayout()
 
@@ -105,7 +101,12 @@ class Fenetre(QWidget):
 
     def draw_game(self):
         # print("Draw user : " + self.username)
-        self.wid_hands.add_team(self.team, self.username)
+        print("draw 1")
+        print(self.username)
+        # print("Current " + self.turn.current_player)
+        if self.turn['current_player'] is not None:
+            self.wid_hands.add_team(self.team, self.username, self.turn['current_player'])
+        print("draw 2")
         # print("draw")
         # print(self.board.to_dic())
         self.wid_board.add_board(self.board)
@@ -117,6 +118,7 @@ class Fenetre(QWidget):
         # game_dic = json.loads(message)
         self.team = gm.Team(message['team'])
         self.board = gm.Board(message['board'])
+        self.turn = message['turn']
 
     def open_popup_join(self):
         self.popup_join = Popup_join()
@@ -126,8 +128,9 @@ class Fenetre(QWidget):
     def handle_launch(self):
         dic_cmd = {'command':'start_game', 'username': self.username}
         game_dic = self.client.make_message(dic_cmd)
-        # self.team = gm.Team(game_dic['team'])
-        # self.board = gm.Board(game_dic['board'])
+        self.team = gm.Team(game_dic['team'])
+        self.board = gm.Board(game_dic['board'])
+        self.turn = game_dic['turn']
         # print("Launch user : " + self.username)
         # self.wid_hands.add_team(self.team, self.username)
         # self.wid_board.add_board(self.board)
@@ -145,9 +148,6 @@ class Fenetre(QWidget):
         QTimer.singleShot(0, self.sub_sock_thread.start)
         dic_cmd = {'command':'join_game', 'username': self.username}
         message_new_game = self.client.make_message(dic_cmd)
-        # self.board = gm.Board(message_new_game['board'])
-        # self.team = gm.Team(message_new_game['team'])
-        # self.draw_game()
         self.popup_join.close()
         self.wid_hands.clear_hands()
 
@@ -157,6 +157,9 @@ class Fenetre(QWidget):
         print(game_dic)
         self.team = gm.Team(game_dic['team'])
         self.board = gm.Board(game_dic['board'])
+        print('tour 1')
+        self.turn = game_dic['turn']
+        print('tour 2')
         self.draw_game()
 
     def handle_but_play(self):
@@ -176,7 +179,6 @@ class Fenetre(QWidget):
             msg.setText(self.turn['endgame_message'])
             msg.setInformativeText("Nombre de tour : " + str(int((self.turn["turn_count"]-1)/len(self.team.player_dic))))
             msg.setWindowTitle("Fin de la partie")
-            # msg.setDetailedText("The details are as follows:")
             msg.setStandardButtons(QMessageBox.Ok)
             msg.buttonClicked.connect(self.end_button)
             msg.exec()
@@ -206,6 +208,12 @@ class Fenetre(QWidget):
         self.board = gm.Board(game_dic['board'])
         self.draw_game()
 
+    def handle_card_clicked(self):
+        dic_cmd = {'command': 'card_selected', 'team': self.team.to_dic()}
+        print("card clicked 1")
+        game_dic = self.client.make_message(dic_cmd)
+        print("card clicked 2")
+
 # Definition de la classe Qcarte ---------------------------
 class QCarte(QPushButton):
     # Classe graphique pour representer une carte
@@ -215,18 +223,20 @@ class QCarte(QPushButton):
         self.hidden = hidden
         if carte is None:
             path_to_im = 'images/hanabi_background_card.png'
+            self.selected = False
         else:
             if self.hidden:
                 path_to_im = "images/hidden.png"
             else:
                 path_to_im = "images/" + carte.to_string()
+            self.selected = carte.selected
         self.set_image(path_to_im)
         self.carte = carte
         self.isclickable = (carte is not None)
-        self.selected = False
+        # self.selected = False
         self.clicked.connect(self.on_click)
         self.image = path_to_im
-
+        self.set_highlight()
         self.setStyleSheet("QPushButton {border-style: outset; border-width: 0px;}")
 
     def __str__(self):
@@ -242,6 +252,7 @@ class QCarte(QPushButton):
         # self.setFixedSize(self.pixmap.size())
 
     def on_click(self):
+        mes_click_card = pyqtSignal(str)
         if self.isclickable:
             if self.selected:
                 if self.hidden:
@@ -252,7 +263,7 @@ class QCarte(QPushButton):
                 self.carte.selected = False
                 self.setChecked(False)
                 self.setStyleSheet("border: 0px solid red")
-                self.setGraphicsEffect(None)
+                self.set_highlight()
             else:
                 if self.hidden:
                     path_to_im = "images/small/hidden"
@@ -262,16 +273,17 @@ class QCarte(QPushButton):
                 self.selected = True
                 self.carte.selected = True
                 self.setChecked(True)
-                effect = QGraphicsDropShadowEffect()
-                effect.setBlurRadius(20)
-                effect.setOffset(0)
-                effect.setColor(Qt.black)
-                self.setGraphicsEffect(effect)
-                # self.setStyleSheet("border: 5px solid red")
-            # pixmap = QPixmap(path_to_im)
-            # pixmap = pixmap.scaled(220, 200)
-            # ButtonIcon = QIcon(pixmap)
-            # self.setIcon(ButtonIcon)
+                self.set_highlight()
+
+    def set_highlight(self):
+        if self.selected:
+            effect = QGraphicsDropShadowEffect()
+            effect.setBlurRadius(20)
+            effect.setOffset(0)
+            effect.setColor(Qt.black)
+            self.setGraphicsEffect(effect)
+        else:
+            self.setGraphicsEffect(None)
 
 
 class Popup_join(QWidget):
@@ -291,18 +303,28 @@ class Popup_join(QWidget):
 
 
 class Widget_hands(QWidget):
+    card_clicked = pyqtSignal()
+
     def __init__(self, user = ""):
         QWidget.__init__(self)
         self.layout_hands = QVBoxLayout()
         self.setLayout(self.layout_hands)
         self.username = user
+        self.team = gm.Team()
 
-    def add_hand(self, player):
+    def add_hand(self, player, current_player, team):
+        self.team = team
         wid_hand = QWidget()
         layout_hand = QVBoxLayout()
         wid_hand.setLayout(layout_hand)
         layout_card = QHBoxLayout()
         wid_name = QLabel(player.name)
+        if player.name == current_player:
+            effect = QGraphicsDropShadowEffect()
+            effect.setBlurRadius(20)
+            effect.setOffset(0)
+            effect.setColor(Qt.black)
+            wid_name.setGraphicsEffect(effect)
         layout_hand.addWidget(wid_name)
         wid_cards = QWidget()
         layout_hand.addWidget(wid_cards)
@@ -315,14 +337,15 @@ class Widget_hands(QWidget):
             wid_carte.pixmap = wid_carte.pixmap.scaled(int(scr_x/12), int(scr_x/12))
             wid_carte.setIcon(QIcon(wid_carte.pixmap))
             wid_carte.setFixedSize(wid_carte.pixmap.size())
+            wid_carte.clicked.connect(self.card_clicked)
             layout_card.addWidget(wid_carte)
         self.layout_hands.addWidget(wid_hand)
 
-    def add_team(self, team, user):
+    def add_team(self, team, user, current_player):
         self.username = user
         self.clear_hands()
         for player_name in team.player_dic.keys():
-            self.add_hand(team.player_dic[player_name])
+            self.add_hand(team.player_dic[player_name], current_player, team)
 
     def clear_hands(self):
         for i in reversed(range(self.layout_hands.count())):
