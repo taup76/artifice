@@ -199,7 +199,7 @@ class Fenetre(QWidget):
         self.board = gm.Board(game_dic['board'])
         self.draw_game()
 
-    def handle_give_clue(self): #TODO
+    def handle_give_clue(self):
         print("On donne une information")
         dic_cmd = {'command': 'give_clue', 'current_player': self.username}
         game_dic = self.client.make_message(dic_cmd)
@@ -334,14 +334,13 @@ class Widget_hands(QWidget):
         scr_y = screen_size.height()
         for carte in player.card_list.card_list:
             wid_carte = QCarte(carte, self.username == player.name)
-            if wid_carte.carte.revealed:
-                print("Il y a un indice")
-                # painter = QPainter()
-                # painter.begin(wid_carte.pixmap())
-                # painter.setPen(QColor(255, 255, 255, 190))
-                # painter.setFont(QFont('Decorative', 280))
-                # painter.drawText(wid_carte.rect(), Qt.AlignCenter, "X")
-                # painter.end()
+            # if wid_carte.carte.revealed
+            painter = QPainter()
+            painter.begin(wid_carte.pixmap)
+            painter.setPen(QColor(255, 255, 255, 190))
+            painter.setFont(QFont('Decorative', 280))
+            painter.drawText(wid_carte.pixmap.rect(), Qt.AlignCenter, "X"*wid_carte.carte.revealed)
+            painter.end()
             wid_carte.pixmap = wid_carte.pixmap.scaled(int(scr_x/12), int(scr_x/12))
             wid_carte.setIcon(QIcon(wid_carte.pixmap))
             wid_carte.setFixedSize(wid_carte.pixmap.size())
