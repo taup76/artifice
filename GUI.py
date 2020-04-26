@@ -334,6 +334,14 @@ class Widget_hands(QWidget):
         scr_y = screen_size.height()
         for carte in player.card_list.card_list:
             wid_carte = QCarte(carte, self.username == player.name)
+            if wid_carte.carte.revealed:
+                print("Il y a un indice")
+                # painter = QPainter()
+                # painter.begin(wid_carte.pixmap())
+                # painter.setPen(QColor(255, 255, 255, 190))
+                # painter.setFont(QFont('Decorative', 280))
+                # painter.drawText(wid_carte.rect(), Qt.AlignCenter, "X")
+                # painter.end()
             wid_carte.pixmap = wid_carte.pixmap.scaled(int(scr_x/12), int(scr_x/12))
             wid_carte.setIcon(QIcon(wid_carte.pixmap))
             wid_carte.setFixedSize(wid_carte.pixmap.size())
@@ -542,15 +550,15 @@ class Widget_board(QWidget):
         for i in reversed(range(self.layout_dpd.count())):
             self.layout_dpd.itemAt(i).widget().setParent(None)
 
+if __name__ == "__main__":
+    app = QApplication.instance()
+    if not app:
+        app = QApplication(sys.argv)
 
-app = QApplication.instance()
-if not app:
-    app = QApplication(sys.argv)
-
-# screen_resolution = app.desktop().screenGeometry()
-# res_x, res_y = screen_resolution.width(), screen_resolution.height()
-# fen = Fenetre()
-# fen.show()
-artif = Artifice()
-artif.show()
-app.exec_()
+    # screen_resolution = app.desktop().screenGeometry()
+    # res_x, res_y = screen_resolution.width(), screen_resolution.height()
+    # fen = Fenetre()
+    # fen.show()
+    artif = Artifice()
+    artif.show()
+    app.exec_()
