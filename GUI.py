@@ -30,6 +30,10 @@ class Artifice(QMainWindow):
         db_action.setStatusTip("Select a file to use as a database")
         # db_action.triggered.connect(self.open_new_db)
 
+        db_newgame = menu.addAction("Rejoindre le serveur")
+        db_newgame.setStatusTip("Create a new game")
+        db_newgame.triggered.connect(self.content.open_popup_join)
+
         self.statusBar().showMessage("Ready")
 
 
@@ -44,6 +48,7 @@ class Fenetre(QWidget):
         self.team = gm.Team()
         self.turn = {}
         self.username = ""
+        self.game_started = False
 
         # On affiche les mains des joueurs
         self.wid_hands = Widget_hands()
@@ -52,18 +57,18 @@ class Fenetre(QWidget):
         self.layout_principal = QHBoxLayout()
 
         # On affiche les boutons pour creer ou rejoindre la partie
-        self.wid_buts_play = QWidget()
-        self.layout_buts_play = QHBoxLayout()
-        self.layout_buts_play.setContentsMargins(int(self.res_x/5), int(self.res_y/5),
-                                                 int(self.res_x/5), int(self.res_y/5))
-        self.wid_buts_play.setLayout(self.layout_buts_play)
-        self.but_join = QPushButton("Rejoindre le serveur")
-        self.but_join.clicked.connect(self.open_popup_join)
-
-        self.but_launch = QPushButton("Demarrer la partie")
-        self.but_launch.clicked.connect(self.handle_launch)
-        self.layout_buts_play.addWidget(self.but_join)
-        self.layout_buts_play.addWidget(self.but_launch)
+        # self.wid_buts_play = QWidget()
+        # self.layout_buts_play = QHBoxLayout()
+        # self.layout_buts_play.setContentsMargins(int(self.res_x/5), int(self.res_y/5),
+        #                                          int(self.res_x/5), int(self.res_y/5))
+        # self.wid_buts_play.setLayout(self.layout_buts_play)
+        # self.but_join = QPushButton("Rejoindre le serveur")
+        # self.but_join.clicked.connect(self.open_popup_join)
+        #
+        # self.but_launch = QPushButton("Demarrer la partie")
+        # self.but_launch.clicked.connect(self.handle_launch)
+        # self.layout_buts_play.addWidget(self.but_join)
+        # self.layout_buts_play.addWidget(self.but_launch)
 
         # On affiche le plateau
         self.wid_board = Widget_board(self)
@@ -90,7 +95,7 @@ class Fenetre(QWidget):
         self.wid_right_panel = QWidget()
         self.layout_right_panel = QVBoxLayout()
         self.wid_right_panel.setLayout(self.layout_right_panel)
-        self.layout_right_panel.addWidget(self.wid_buts_play)
+        # self.layout_right_panel.addWidget(self.wid_buts_play)
         # self.layout_principal.addWidget(self.wid_clue_miss,3,1)
         self.layout_right_panel.addWidget(self.wid_hands)
         self.layout_right_panel.addWidget(self.wid_actions)
@@ -121,8 +126,9 @@ class Fenetre(QWidget):
         self.turn = message['turn']
 
     def open_popup_join(self):
-        self.popup_join = Popup_join()
+        self.popup_join = Popup_join(self)
         self.popup_join.but_ok.clicked.connect(self.handle_ok_join)
+        self.popup_join.but_new.clicked.connect(self.handle_launch)
         self.popup_join.show()
 
     def handle_launch(self):
@@ -135,6 +141,8 @@ class Fenetre(QWidget):
         # self.wid_hands.add_team(self.team, self.username)
         # self.wid_board.add_board(self.board)
         print("Initialisation du jeu OK")
+        self.game_started = True
+        self.popup_join.close()
 
     def handle_ok_join(self):
         self.username = self.popup_join.field_joueur.text()
@@ -148,7 +156,8 @@ class Fenetre(QWidget):
         QTimer.singleShot(0, self.sub_sock_thread.start)
         dic_cmd = {'command':'join_game', 'username': self.username}
         message_new_game = self.client.make_message(dic_cmd)
-        self.popup_join.close()
+        self.popup_join.but_ok.setEnabled(False)
+        # self.popup_join.close()
         self.wid_hands.clear_hands()
 
     def handle_message_sub(self,game_dic):
@@ -213,6 +222,10 @@ class Fenetre(QWidget):
         print("card clicked 1")
         game_dic = self.client.make_message(dic_cmd)
         print("card clicked 2")
+
+    def get_players(self):
+        joueurs = self.team.player_dic.keys()
+        return list(joueurs)
 
 # Definition de la classe Qcarte ---------------------------
 class QCarte(QPushButton):
@@ -288,18 +301,47 @@ class QCarte(QPushButton):
 
 class Popup_join(QWidget):
     trigger = pyqtSignal()
+    update_players = pyqtSignal()
 
-    def __init__(self):
+    def __init__(self, parent):
         QWidget.__init__(self)
+        self.top_parent = parent
         self.layout_top = QVBoxLayout()
         self.setLayout(self.layout_top)
         self.label_setjoueur = QLabel("Nom du joueur")
         self.layout_top.addWidget(self.label_setjoueur)
         self.field_joueur = QLineEdit("")
         self.layout_top.addWidget(self.field_joueur)
-        self.but_ok = QPushButton("OK")
-        self.layout_top.addWidget(self.but_ok)
+
+        self.wid_connected = QWidget()
+        self.layout_connected = QVBoxLayout()
+        self.wid_connected.setLayout(self.layout_connected)
+        self.layout_top.addWidget(self.wid_connected)
+
+        self.wid_buttons = QWidget()
+        self.lay_buttons = QHBoxLayout()
+        self.wid_buttons.setLayout(self.lay_buttons)
+        self.but_ok = QPushButton("Rejoindre le serveur")
+        self.but_new = QPushButton("Lancer la partie")
+        self.lay_buttons.addWidget(self.but_ok)
+        self.lay_buttons.addWidget(self.but_new)
+        self.layout_top.addWidget(self.wid_buttons)
         self.show()
+        self.update_players.connect(self.refresh, Qt.QueuedConnection)
+        self.update_players.emit()
+        self.label_joueurs = [QLabel("Joueur 1"), QLabel("Joueur 2")]
+        for lab_jou in self.label_joueurs:
+            self.layout_connected.addWidget(lab_jou)
+
+    def refresh(self):
+        joueurs = self.top_parent.get_players()
+        # for i in reversed(range(self.layout_connected.count())):
+        #     self.layout_connected.itemAt(i).widget().setParent(None)
+        for cpt_jou in range(len(joueurs)):
+            self.label_joueurs[cpt_jou].setText(joueurs[cpt_jou])
+            # self.layout_connected.addWidget(self.label_test)
+        if not self.top_parent.game_started:
+            self.update_players.emit()
 
 
 class Widget_hands(QWidget):

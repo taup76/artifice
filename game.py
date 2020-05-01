@@ -401,7 +401,7 @@ class Game:
         error_str = ""
         for player_name in self.team.player_dic:
             player = self.team.player_dic[player_name]
-            if player.has_selected_card() & player != self.turn.current_player :
+            if player.has_selected_card() and (player_name != self.turn.current_player):
                 target_player = player
                 break
         if target_player.name is None:
