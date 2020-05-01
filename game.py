@@ -235,8 +235,8 @@ class Team:
             self.from_dic(dic)
 
     def add_player(self, player):
-        if player in self.player_dic:
-            return "You cannot have two players with the same name"
+        if player.name in self.player_dic:
+            return "Nom déjà pris"
         self.player_dic[player.name] = player
         return ""
 
@@ -340,9 +340,9 @@ class Game:
         if not self.is_init:
             self.init_game()
         if self.is_started:
-            return "Game is already started"
+            return "Le jeu est déjà lancé"
         if len(self.team.player_dic) >= 5:
-            return "Cannot add any more player"
+            return "Nombre maximal de joueurs atteint"
 
         return self.team.add_player(Player(player_name))
 

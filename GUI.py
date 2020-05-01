@@ -2,6 +2,7 @@ import sys
 from PyQt5.QtWidgets import QApplication, QWidget, QPushButton, QGridLayout, QFormLayout, QLabel, QLineEdit, QHBoxLayout, QVBoxLayout
 from PyQt5.QtGui import *
 from PyQt5.Qt import *
+from PyQt5.Qt import QSettings
 from PyQt5.QtCore import QObject,pyqtSignal
 from PyQt5.QtCore import QThread
 import game as gm
@@ -12,11 +13,18 @@ import json
 # https://stackoverflow.com/questions/26012132/zero-mq-socket-recv-call-is-blocking
 
 
+settings = QSettings("artifice.ini", QSettings.IniFormat)
+if not settings.value("ip_client"):
+    settings.setValue("ip_client", "127.0.0.1")
+
 class Artifice(QMainWindow):
+
     def __init__(self):
         QMainWindow.__init__(self)
         self.content = Fenetre()
         self.setCentralWidget(self.content)
+        self.setStyleSheet("QPushButton {border: none; text-decoration: none;} "
+                           "QPushButton:hover {border: none; text-decoration: underline; image: url(images/b1.png);}")
         # self.setStyleSheet("QPushButton {border: 1px solid red;}")
         # self.setStyleSheet("QCarte:pressed {border: 1px solid red;}")
         # self.setStyleSheet("QPushButton:checked {border-style: outset; border-width: 10px;}")
@@ -25,14 +33,15 @@ class Artifice(QMainWindow):
         # self.setBaseSize(self.screen().size())
 
         menubar = self.menuBar()
-        menu = menubar.addMenu('File')
-        db_action = menu.addAction("Open file")
-        db_action.setStatusTip("Select a file to use as a database")
-        # db_action.triggered.connect(self.open_new_db)
+        menu = menubar.addMenu('Fichier')
 
-        db_newgame = menu.addAction("Rejoindre le serveur")
-        db_newgame.setStatusTip("Create a new game")
+        db_newgame = menu.addAction("Nouvelle partie")
+        db_newgame.setStatusTip("Lance une nouvelle partie")
         db_newgame.triggered.connect(self.content.open_popup_join)
+
+        db_param = menu.addAction("Paramètres")
+        db_param.setStatusTip("Paramètres du jeu")
+        db_param.triggered.connect(self.content.open_popup_param)
 
         self.statusBar().showMessage("Ready")
 
@@ -49,6 +58,15 @@ class Fenetre(QWidget):
         self.turn = {}
         self.username = ""
         self.game_started = False
+
+        self.client = client.Client(self.username, settings)
+        self.sub_sock_thread = QThread()
+        self.sub_listen = client.SubListener(self.client.context, settings)
+        self.sub_listen.moveToThread(self.sub_sock_thread)
+        self.sub_sock_thread.started.connect(self.sub_listen.loop)
+        self.sub_listen.message.connect(self.handle_message_sub)
+        # self.sub_sock_thread.start()
+        QTimer.singleShot(0, self.sub_sock_thread.start)
 
         # On affiche les mains des joueurs
         self.wid_hands = Widget_hands()
@@ -77,14 +95,22 @@ class Fenetre(QWidget):
         # On affiche les boutons pour jouer ou defausser les cartes selectionnees, la défausse et la pioche
         self.wid_actions = QWidget()
         self.but_play = QPushButton("Jouer")
+        self.but_play.setObjectName("but_jouer")
+        self.setStyleSheet("QPushButton#but_jouer "
+                           "{border: none; text-decoration: none; image: url(images/token/play.png);} "
+                           "QPushButton#but_jouer:hover "
+                           "{border: none; text-decoration: underline; image: url(images/token/play_hover.png);}")
+        self.but_play.setFont(QFont("Brush Script MT", 40))
         self.but_play.clicked.connect(self.handle_but_play)
-        self.but_dismiss = QPushButton("Defausser")
+        self.but_dismiss = QPushButton("Défausser")
+        self.but_dismiss.setFont(QFont("Brush Script MT", 40))
         self.but_dismiss.clicked.connect(self.handle_dismiss)
         self.but_give_clue = QPushButton("Renseigner")
+        self.but_give_clue.setFont(QFont("Brush Script MT", 40))
         self.but_give_clue.clicked.connect(self.handle_give_clue)
         self.layout_actions = QHBoxLayout()
-        self.layout_actions.setContentsMargins(int(self.res_x/5), int(self.res_y/5),
-                                                 int(self.res_x/5), int(self.res_y/5))
+        # self.layout_actions.setContentsMargins(int(self.res_x/5), int(self.res_y/5),
+        #                                          int(self.res_x/5), int(self.res_y/5))
         self.wid_actions.setLayout(self.layout_actions)
         self.layout_actions.addWidget(self.but_play)
         self.layout_actions.addWidget(self.but_dismiss)
@@ -131,6 +157,19 @@ class Fenetre(QWidget):
         self.popup_join.but_new.clicked.connect(self.handle_launch)
         self.popup_join.show()
 
+    def open_popup_param(self):
+        self.popup_param = Popup_param(self)
+        self.popup_param.but_ok.clicked.connect(self.handle_ok_param)
+        self.popup_param.but_cancel.clicked.connect(self.handle_cancel_param)
+        self.popup_param.show()
+
+    def handle_ok_param(self):
+        self.popup_param.set_param()
+        self.popup_param.close()
+
+    def handle_cancel_param(self):
+        self.popup_param.close()
+
     def handle_launch(self):
         dic_cmd = {'command':'start_game', 'username': self.username}
         game_dic = self.client.make_message(dic_cmd)
@@ -146,17 +185,15 @@ class Fenetre(QWidget):
 
     def handle_ok_join(self):
         self.username = self.popup_join.field_joueur.text()
-        self.client = client.Client(self.username)
-        self.sub_sock_thread = QThread()
-        self.sub_listen = client.SubListener(self.client.context)
-        self.sub_listen.moveToThread(self.sub_sock_thread)
-        self.sub_sock_thread.started.connect(self.sub_listen.loop)
-        self.sub_listen.message.connect(self.handle_message_sub)
-        # self.sub_sock_thread.start()
-        QTimer.singleShot(0, self.sub_sock_thread.start)
         dic_cmd = {'command':'join_game', 'username': self.username}
         message_new_game = self.client.make_message(dic_cmd)
-        self.popup_join.but_ok.setEnabled(False)
+        if message_new_game['result'] == '':
+            self.popup_join.set_status("Serveur rejoint, en attente de joueurs", "")
+            self.popup_join.but_ok.setEnabled(False)
+            self.popup_join.but_new.setEnabled(True)
+        else:
+            self.popup_join.set_status(message_new_game['result'], "error")
+            self.popup_join.but_new.setEnabled(False)
         # self.popup_join.close()
         self.wid_hands.clear_hands()
 
@@ -323,25 +360,54 @@ class Popup_join(QWidget):
         self.wid_buttons.setLayout(self.lay_buttons)
         self.but_ok = QPushButton("Rejoindre le serveur")
         self.but_new = QPushButton("Lancer la partie")
+        self.but_new.setEnabled(False)
         self.lay_buttons.addWidget(self.but_ok)
         self.lay_buttons.addWidget(self.but_new)
         self.layout_top.addWidget(self.wid_buttons)
         self.show()
         self.update_players.connect(self.refresh, Qt.QueuedConnection)
         self.update_players.emit()
-        self.label_joueurs = [QLabel("Joueur 1"), QLabel("Joueur 2")]
+        self.label_joueurs = [QLabel("Joueur 1"), QLabel("Joueur 2"), QLabel("Joueur 3"),
+                              QLabel("Joueur 4"), QLabel("Joueur 5")]
         for lab_jou in self.label_joueurs:
             self.layout_connected.addWidget(lab_jou)
+        self.lab_status = QLabel('')
+        self.lab_status.setObjectName("popup_join_status")
+        self.layout_top.addWidget(self.lab_status)
 
     def refresh(self):
         joueurs = self.top_parent.get_players()
-        # for i in reversed(range(self.layout_connected.count())):
-        #     self.layout_connected.itemAt(i).widget().setParent(None)
         for cpt_jou in range(len(joueurs)):
             self.label_joueurs[cpt_jou].setText(joueurs[cpt_jou])
-            # self.layout_connected.addWidget(self.label_test)
         if not self.top_parent.game_started:
             self.update_players.emit()
+
+    def set_status(self, status, type):
+        if type == 'error':
+            self.lab_status.setStyleSheet('QLabel#popup_join_status {color: red}')
+        else:
+            self.lab_status.setStyleSheet('QLabel#popup_join_status {color: black}')
+        self.lab_status.setText(status)
+
+
+class Popup_param(QWidget):
+
+    def __init__(self, parent):
+        QWidget.__init__(self)
+        self.top_parent = parent
+        self.layout_top = QFormLayout()
+        self.setLayout(self.layout_top)
+        self.lab_ip = QLabel("Adresse IP : ")
+        self.param_ip = QLineEdit()
+        if settings.contains("ip_client"):
+            self.param_ip.setText(settings.value("ip_client"))
+        self.layout_top.addRow(self.lab_ip, self.param_ip)
+        self.but_ok = QPushButton("OK")
+        self.but_cancel = QPushButton("Annuler")
+        self.layout_top.addRow(self.but_ok, self.but_cancel)
+
+    def set_param(self):
+        settings.setValue("ip_client", self.param_ip.text())
 
 
 class Widget_hands(QWidget):
@@ -361,7 +427,11 @@ class Widget_hands(QWidget):
         wid_hand.setLayout(layout_hand)
         layout_card = QHBoxLayout()
         wid_name = QLabel(player.name)
+        wid_name.setObjectName('player_name')
+        wid_name.setFont(QFont("Brush Script MT", 25))
+        wid_name.setStyleSheet("QLabel {color: rgba(0,0,0,50%);}")
         if player.name == current_player:
+            wid_name.setStyleSheet("QLabel {color: rgba(0,0,0,100%);}")
             effect = QGraphicsDropShadowEffect()
             effect.setBlurRadius(20)
             effect.setOffset(0)

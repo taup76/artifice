@@ -5,17 +5,21 @@
 
 import zmq
 from PyQt5 import QtCore
+from PyQt5.Qt import QSettings
 import json
 
 
+
 class Client:
-    def __init__(self, joueur="", game_dic={}):
+    def __init__(self, game_dic={}, settings=QSettings()):
         self.context = zmq.Context()
         self.game_dic = game_dic
         # self.ip = "192.168.1.98"
-        self.ip = "localhost"
+        if settings.contains("ip_client"):
+            self.ip = settings.value("ip_client")
+        else:
+            self.ip = "localhost"
         self.port = 5555
-        self.joueur = joueur
         self.connect_socket()
 
     def __str__(self):
@@ -48,12 +52,15 @@ class Client:
 class SubListener(QtCore.QObject):
     message = QtCore.pyqtSignal(str)
 
-    def __init__(self, context):
+    def __init__(self, context, settings = QSettings()):
         # self.context = zmq.Context()
         QtCore.QObject.__init__(self)
         self.subport = 5556
         # self.ip = "192.168.1.98"
-        self.ip = "localhost"
+        if settings.contains("ip_client"):
+            self.ip = settings.value("ip_client")
+        else:
+            self.ip = "localhost"
         self.sub_socket = context.socket(zmq.SUB)
         self.sub_socket.connect("tcp://" + self.ip + ':' + str(self.subport))
         topicfilter = "message"
