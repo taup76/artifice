@@ -23,8 +23,8 @@ class Artifice(QMainWindow):
         QMainWindow.__init__(self)
         self.content = Fenetre()
         self.setCentralWidget(self.content)
-        self.setStyleSheet("QPushButton {border: none; text-decoration: none;} "
-                           "QPushButton:hover {border: none; text-decoration: underline; image: url(images/b1.png);}")
+        # self.setStyleSheet("QPushButton {border: none; text-decoration: none;} "
+        #                    "QPushButton:hover {border: none; text-decoration: underline; image: url(images/b1.png);}")
         # self.setStyleSheet("QPushButton {border: 1px solid red;}")
         # self.setStyleSheet("QCarte:pressed {border: 1px solid red;}")
         # self.setStyleSheet("QPushButton:checked {border-style: outset; border-width: 10px;}")
@@ -94,18 +94,28 @@ class Fenetre(QWidget):
 
         # On affiche les boutons pour jouer ou defausser les cartes selectionnees, la défausse et la pioche
         self.wid_actions = QWidget()
-        self.but_play = QPushButton("Jouer")
+        self.but_play = QPushButton("")
         self.but_play.setObjectName("but_jouer")
-        self.setStyleSheet("QPushButton#but_jouer "
+        self.setStyleSheet(self.styleSheet() + "QPushButton#but_jouer "
                            "{border: none; text-decoration: none; image: url(images/token/play.png);} "
                            "QPushButton#but_jouer:hover "
                            "{border: none; text-decoration: underline; image: url(images/token/play_hover.png);}")
         self.but_play.setFont(QFont("Brush Script MT", 40))
         self.but_play.clicked.connect(self.handle_but_play)
-        self.but_dismiss = QPushButton("Défausser")
+        self.but_dismiss = QPushButton("")
+        self.but_dismiss.setObjectName("but_dismiss")
+        self.setStyleSheet(self.styleSheet() + "QPushButton#but_dismiss "
+                           "{border: none; text-decoration: none; image: url(images/token/discard.png);} "
+                           "QPushButton#but_dismiss:hover "
+                           "{border: none; text-decoration: underline; image: url(images/token/discard_hover.png);}")
         self.but_dismiss.setFont(QFont("Brush Script MT", 40))
         self.but_dismiss.clicked.connect(self.handle_dismiss)
-        self.but_give_clue = QPushButton("Renseigner")
+        self.but_give_clue = QPushButton("")
+        self.but_give_clue.setObjectName("but_clue")
+        self.setStyleSheet(self.styleSheet() + "QPushButton#but_clue "
+                           "{border: none; text-decoration: none; image: url(images/token/clue.png);} "
+                           "QPushButton#but_clue:hover "
+                           "{border: none; text-decoration: underline; image: url(images/token/clue_hover.png);}")
         self.but_give_clue.setFont(QFont("Brush Script MT", 40))
         self.but_give_clue.clicked.connect(self.handle_give_clue)
         self.layout_actions = QHBoxLayout()
