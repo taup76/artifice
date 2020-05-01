@@ -235,7 +235,10 @@ class Team:
             self.from_dic(dic)
 
     def add_player(self, player):
+        if player in self.player_dic:
+            return "You cannot have two players with the same name"
         self.player_dic[player.name] = player
+        return ""
 
     def init_hands(self, board):
         nb_cards = 4
@@ -341,8 +344,7 @@ class Game:
         if len(self.team.player_dic) >= 5:
             return "Cannot add any more player"
 
-        self.team.add_player(Player(player_name))
-        return ""
+        return self.team.add_player(Player(player_name))
 
     def start_game(self):
         if not self.is_init:
