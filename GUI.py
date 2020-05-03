@@ -419,6 +419,31 @@ class Popup_param(QWidget):
     def set_param(self):
         settings.setValue("ip_client", self.param_ip.text())
 
+class Popup_clue(QWidget):
+
+    def __init__(self, parent):
+        QWidget.__init__(self)
+        self.top_parent = parent
+        self.layout_top = QVBoxLayout()
+        self.setLayout(self.layout_top)
+        # Menu pour choisir qui on renseigne
+        self.wid_clued_play = QWidget()
+        self.lay_clued = QHBoxLayout()
+        self.wid_clued_play.setLayout(self.lay_clued)
+        self.lab_nom = QLabel('Joueur à renseigner : ')
+        self.combo_name = QComboBox()
+        joueurs = parent.get_players()
+        for joueur in joueurs:
+            self.combo_name.addItem(joueur)
+        
+
+        self.but_ok = QPushButton("OK")
+        self.but_cancel = QPushButton("Annuler")
+        self.layout_top.addRow(self.but_ok, self.but_cancel)
+
+    def set_param(self):
+        settings.setValue("ip_client", self.param_ip.text())
+
 
 class Widget_hands(QWidget):
     card_clicked = pyqtSignal()
