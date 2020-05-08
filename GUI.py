@@ -216,8 +216,9 @@ class Fenetre(QWidget):
                 self.but_give_clue.setEnabled(False)
                 self.but_give_clue.setVisible(False)
             else:
-                self.but_give_clue.setEnabled(True)
-                self.but_give_clue.setVisible(True)
+                if self.turn['current_player'] == self.username:
+                    self.but_give_clue.setEnabled(True)
+                    self.but_give_clue.setVisible(True)
         if self.turn['endgame_message'] is not None:
             msg = QMessageBox()
             msg.setIcon(QMessageBox.Information)
@@ -229,9 +230,7 @@ class Fenetre(QWidget):
             msg.exec()
 
     def show_buttons(self, is_showed):
-        print("SHOW 1")
         self.but_play.setVisible(is_showed)
-        print("SHOW 2")
         self.but_dismiss.setVisible(is_showed)
         print("SHOW 2bis")
         self.but_give_clue.setVisible(is_showed)
