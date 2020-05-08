@@ -148,6 +148,9 @@ class Board:
         if len(target_stack.card_list) + 1 == card.value:
             # if ok, add to stack
             self.stack_dic[card.color].append(card)
+            # if Hanabi, add clue
+            if self.stack_dic[card.color].get_length() == 5:
+                self.add_clue()
         else:
             # otherwise, discard card and add miss counter
             self.discard_list.append(card)
@@ -429,6 +432,11 @@ class Game:
         target_player, error_str = self.find_target_player()
         if len(error_str) > 0:
             return error_str
+
+        # if no clue left, cannot give any clue
+        if self.board.clues == 0:
+            return "You cannot give any more clue"
+
         target_player.receive_clue()
         self.board.take_clue()
         self.team.unselect_all()
