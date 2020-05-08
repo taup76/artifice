@@ -199,11 +199,11 @@ class Fenetre(QWidget):
         message_new_game = self.client.make_message(dic_cmd)
         if message_new_game['result'] == '':
             self.popup_join.set_status("Serveur rejoint, en attente de joueurs", "")
-            self.popup_join.but_ok.setEnabled(False)
-            self.popup_join.but_new.setEnabled(True)
+            self.popup_join.but_ok.setVisible(False)
+            self.popup_join.but_new.setVisible(True)
         else:
             self.popup_join.set_status(message_new_game['result'], "error")
-            self.popup_join.but_new.setEnabled(False)
+            self.popup_join.but_new.setVisible(False)
         # self.popup_join.close()
         self.wid_hands.clear_hands()
 
@@ -225,7 +225,6 @@ class Fenetre(QWidget):
                 self.but_give_clue.setEnabled(True)
                 self.but_give_clue.setVisible(True)
         if self.turn['endgame_message'] is not None:
-            print('PEERDUU')
             msg = QMessageBox()
             msg.setIcon(QMessageBox.Information)
             msg.setText(self.turn['endgame_message'])
@@ -380,6 +379,7 @@ class Popup_join(QWidget):
         self.layout_top = QVBoxLayout()
         self.setLayout(self.layout_top)
         self.label_setjoueur = QLabel("Nom du joueur")
+        self.label_setjoueur.setFont(QFont("Brush Script MT", 25))
         self.layout_top.addWidget(self.label_setjoueur)
         self.field_joueur = QLineEdit("")
         self.layout_top.addWidget(self.field_joueur)
@@ -392,9 +392,20 @@ class Popup_join(QWidget):
         self.wid_buttons = QWidget()
         self.lay_buttons = QHBoxLayout()
         self.wid_buttons.setLayout(self.lay_buttons)
-        self.but_ok = QPushButton("Rejoindre le serveur")
-        self.but_new = QPushButton("Lancer la partie")
-        self.but_new.setEnabled(False)
+        self.but_ok = QPushButton("")
+        self.but_ok.setObjectName("but_ok")
+        self.setStyleSheet(self.styleSheet() + "QPushButton#but_ok "
+                                               "{border: none; text-decoration: none; image: url(images/token/join_server.png); min-height: 400px;} "
+                                               "QPushButton#but_ok:hover "
+                                               "{border: none; text-decoration: underline; image: url(images/token/join_server_hover.png);}")
+        self.but_new = QPushButton("")
+        self.but_new.setObjectName("but_new")
+        self.setStyleSheet(self.styleSheet() + "QPushButton#but_new "
+                                               "{border: none; text-decoration: none; image: url(images/token/launch_game.png); min-height: 400px;} "
+                                               "QPushButton#but_new:hover "
+                                               "{border: none; text-decoration: underline; image: url(images/token/launch_game_hover.png);}")
+
+        self.but_new.setVisible(False)
         self.lay_buttons.addWidget(self.but_ok)
         self.lay_buttons.addWidget(self.but_new)
         self.layout_top.addWidget(self.wid_buttons)
@@ -456,6 +467,7 @@ class Popup_clue(QWidget):
         self.lay_clued = QHBoxLayout()
         self.wid_clued_play.setLayout(self.lay_clued)
         self.lab_nom = QLabel("Joueur à renseigner : ")
+        self.lab_nom.setFont(QFont("Brush Script MT", 25))
         self.combo_name = QComboBox()
         joueurs = parent.get_players()
         print(joueurs)
@@ -484,8 +496,20 @@ class Popup_clue(QWidget):
         self.wid_butpop = QWidget()
         self.lay_butpop = QHBoxLayout()
         self.wid_butpop.setLayout(self.lay_butpop)
-        self.but_ok = QPushButton("OK")
-        self.but_cancel = QPushButton("Annuler")
+        self.but_ok = QPushButton()
+        self.but_ok.setObjectName("clue_ok")
+        self.setStyleSheet(self.styleSheet() + "QPushButton#clue_ok "
+                                               "{border: none; text-decoration: none; image: url(images/token/OK.png); min-height: 400px;} "
+                                               "QPushButton#clue_ok:hover "
+                                               "{border: none; text-decoration: underline; image: url(images/token/OK_hover.png);}")
+
+        self.but_cancel = QPushButton()
+        self.but_cancel.setObjectName("clue_cancel")
+        self.setStyleSheet(self.styleSheet() + "QPushButton#clue_cancel "
+                                               "{border: none; text-decoration: none; image: url(images/token/annuler.png); min-height: 400px;} "
+                                               "QPushButton#clue_cancel:hover "
+                                               "{border: none; text-decoration: underline; image: url(images/token/annuler_hover.png);}")
+
         self.lay_butpop.addWidget(self.but_ok)
         self.lay_butpop.addWidget(self.but_cancel)
         self.layout_top.addWidget(self.wid_butpop)
