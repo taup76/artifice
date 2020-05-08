@@ -250,9 +250,11 @@ class Fenetre(QWidget):
 
     def end_button(self):
         print("Partie terminée")
-        self.but_play.setEnabled(False)
-        self.but_dismiss.setEnabled(False)
-        self.but_give_clue.setEnabled(False)
+        # self.but_play.setEnabled(False)
+        # self.but_dismiss.setEnabled(False)
+        # self.but_give_clue.setEnabled(False)
+        dic_cmd = {'command': 'finish_game'}
+        game_dic = self.client.make_message(dic_cmd)
 
     def handle_dismiss(self):
         print("On défausse une carte")
