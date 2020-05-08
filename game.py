@@ -218,7 +218,7 @@ class Player:
 
     def receive_clue(self, clue):
         for card in self.card_list.card_list:
-            if card.color == clue | card.value == int(clue):
+            if card.color == clue or str(card.value) == clue:
                 card.revealed += clue
 
     def has_selected_card(self):

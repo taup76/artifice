@@ -275,17 +275,18 @@ class Fenetre(QWidget):
     def handle_ok_clue(self):
         print("On donne un indice")
         for i in range(len(self.popup_clue.clues_list)):
-            if self.popup_clue.lay_gridclue.itemAt(i % 5, int(i/5)).widget().isChecked():
-                clue_selected = self.popup_clue.clues_list(i)
+            if self.popup_clue.lay_gridclue.itemAtPosition(i % 5, int(i/5)).widget().isChecked():
+                clue_selected = self.popup_clue.clues_list[i]
         dic_cmd = {'command': 'give_clue', 'target_player': self.popup_clue.combo_name.currentText(), 'clue': clue_selected}
         game_dic = self.client.make_message(dic_cmd)
         print(game_dic)
         self.team = gm.Team(game_dic['team'])
         self.board = gm.Board(game_dic['board'])
         self.draw_game
+        self.popup_clue.close()
 
     def handle_cancel_clue(self):
-        self.close()
+        self.popup_clue.close()
 
     def handle_card_clicked(self):
         dic_cmd = {'command': 'card_selected', 'team': self.team.to_dic()}
@@ -531,7 +532,7 @@ class Widget_hands(QWidget):
             painter.begin(wid_carte.pixmap)
             painter.setPen(QColor(255, 255, 255, 190))
             painter.setFont(QFont('Decorative', 280))
-            painter.drawText(wid_carte.pixmap.rect(), Qt.AlignCenter, "X"*wid_carte.carte.revealed)
+            painter.drawText(wid_carte.pixmap.rect(), Qt.AlignCenter, wid_carte.carte.revealed)
             painter.end()
             wid_carte.pixmap = wid_carte.pixmap.scaled(int(scr_x/12), int(scr_x/12))
             wid_carte.setIcon(QIcon(wid_carte.pixmap))
