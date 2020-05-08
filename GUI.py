@@ -217,6 +217,24 @@ class Fenetre(QWidget):
         self.turn = game_dic['turn']
         print('tour 2')
         self.draw_game()
+        if self.game_started:
+            if self.board.clues == 0:
+                self.but_give_clue.setEnabled(False)
+                self.but_give_clue.setVisible(False)
+            else:
+                self.but_give_clue.setEnabled(True)
+                self.but_give_clue.setVisible(True)
+        if self.turn['endgame_message'] is not None:
+            print('PEERDUU')
+            msg = QMessageBox()
+            msg.setIcon(QMessageBox.Information)
+            msg.setText(self.turn['endgame_message'])
+            msg.setInformativeText("Nombre de tour : " + str(int((self.turn["turn_count"]-1)/len(self.team.player_dic))))
+            msg.setWindowTitle("Fin de la partie")
+            msg.setStandardButtons(QMessageBox.Ok)
+            msg.buttonClicked.connect(self.end_button)
+            msg.exec()
+
 
     def handle_but_play(self):
         print("On joue une carte")
@@ -228,23 +246,15 @@ class Fenetre(QWidget):
         self.board = gm.Board(game_dic['board'])
         self.turn = game_dic['turn']
         print(self.turn['endgame_message'])
-        if self.turn['endgame_message'] is not None:
-            print('PEERDUU')
-            msg = QMessageBox()
-            msg.setIcon(QMessageBox.Information)
-            msg.setText(self.turn['endgame_message'])
-            msg.setInformativeText("Nombre de tour : " + str(int((self.turn["turn_count"]-1)/len(self.team.player_dic))))
-            msg.setWindowTitle("Fin de la partie")
-            msg.setStandardButtons(QMessageBox.Ok)
-            msg.buttonClicked.connect(self.end_button)
-            msg.exec()
         self.draw_game()
 
     def end_button(self):
         print("Partie terminée")
-        self.but_play.setEnabled(False)
-        self.but_dismiss.setEnabled(False)
-        self.but_give_clue.setEnabled(False)
+        # self.but_play.setEnabled(False)
+        # self.but_dismiss.setEnabled(False)
+        # self.but_give_clue.setEnabled(False)
+        dic_cmd = {'command': 'finish_game'}
+        game_dic = self.client.make_message(dic_cmd)
 
     def handle_dismiss(self):
         print("On défausse une carte")
@@ -256,13 +266,27 @@ class Fenetre(QWidget):
         self.draw_game()
 
     def handle_give_clue(self):
+        self.popup_clue = Popup_clue(self)
+        self.popup_clue.but_ok.clicked.connect(self.handle_ok_clue)
+        self.popup_clue.but_cancel.clicked.connect(self.handle_cancel_clue)
+        self.popup_clue.show()
         print("On donne une information")
-        dic_cmd = {'command': 'give_clue', 'current_player': self.username}
+
+    def handle_ok_clue(self):
+        print("On donne un indice")
+        for i in range(len(self.popup_clue.clues_list)):
+            if self.popup_clue.lay_gridclue.itemAtPosition(i % 5, int(i/5)).widget().isChecked():
+                clue_selected = self.popup_clue.clues_list[i]
+        dic_cmd = {'command': 'give_clue', 'target_player': self.popup_clue.combo_name.currentText(), 'clue': clue_selected}
         game_dic = self.client.make_message(dic_cmd)
         print(game_dic)
         self.team = gm.Team(game_dic['team'])
         self.board = gm.Board(game_dic['board'])
-        self.draw_game()
+        self.draw_game
+        self.popup_clue.close()
+
+    def handle_cancel_clue(self):
+        self.popup_clue.close()
 
     def handle_card_clicked(self):
         dic_cmd = {'command': 'card_selected', 'team': self.team.to_dic()}
@@ -419,6 +443,53 @@ class Popup_param(QWidget):
     def set_param(self):
         settings.setValue("ip_client", self.param_ip.text())
 
+class Popup_clue(QWidget):
+
+    def __init__(self, parent):
+        QWidget.__init__(self)
+        self.clue_selected = None
+        self.top_parent = parent
+        self.layout_top = QVBoxLayout()
+        self.setLayout(self.layout_top)
+        # Menu pour choisir qui on renseigne
+        self.wid_clued_play = QWidget()
+        self.lay_clued = QHBoxLayout()
+        self.wid_clued_play.setLayout(self.lay_clued)
+        self.lab_nom = QLabel("Joueur à renseigner : ")
+        self.combo_name = QComboBox()
+        joueurs = parent.get_players()
+        print(joueurs)
+        for joueur in joueurs:
+            print("Popup play : " + joueur)
+            if joueur is not self.top_parent.username:
+                self.combo_name.addItem(joueur)
+        self.lay_clued.addWidget(self.lab_nom)
+        self.lay_clued.addWidget(self.combo_name)
+        self.layout_top.addWidget(self.wid_clued_play)
+        self.show()
+
+        self.clues_list = ['1', '2', '3', '4', '5', 'r', 'b', 'g', 'w', 'y']
+        self.wid_gridclue = QWidget()
+        self.lay_gridclue = QGridLayout()
+        self.wid_gridclue.setLayout(self.lay_gridclue)
+        for i in range(len(self.clues_list)):
+            self.radio_clue = QRadioButton()
+            # icon = QIcon()
+            # icon.addPixmap()
+            self.radio_clue.setIcon(QIcon(QPixmap("images/token/" + self.clues_list[i])))
+            self.radio_clue.setIconSize(QSize(50, 50))
+            self.lay_gridclue.addWidget(self.radio_clue, i % 5, int(i/5))
+        self.layout_top.addWidget(self.wid_gridclue)
+
+        self.wid_butpop = QWidget()
+        self.lay_butpop = QHBoxLayout()
+        self.wid_butpop.setLayout(self.lay_butpop)
+        self.but_ok = QPushButton("OK")
+        self.but_cancel = QPushButton("Annuler")
+        self.lay_butpop.addWidget(self.but_ok)
+        self.lay_butpop.addWidget(self.but_cancel)
+        self.layout_top.addWidget(self.wid_butpop)
+
 
 class Widget_hands(QWidget):
     card_clicked = pyqtSignal()
@@ -461,7 +532,7 @@ class Widget_hands(QWidget):
             painter.begin(wid_carte.pixmap)
             painter.setPen(QColor(255, 255, 255, 190))
             painter.setFont(QFont('Decorative', 280))
-            painter.drawText(wid_carte.pixmap.rect(), Qt.AlignCenter, "X"*wid_carte.carte.revealed)
+            painter.drawText(wid_carte.pixmap.rect(), Qt.AlignCenter, wid_carte.carte.revealed)
             painter.end()
             wid_carte.pixmap = wid_carte.pixmap.scaled(int(scr_x/12), int(scr_x/12))
             wid_carte.setIcon(QIcon(wid_carte.pixmap))
