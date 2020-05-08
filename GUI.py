@@ -141,15 +141,9 @@ class Fenetre(QWidget):
 
 
     def draw_game(self):
-        # print("Draw user : " + self.username)
-        print("draw 1")
-        print(self.username)
-        # print("Current " + self.turn.current_player)
         if self.turn['current_player'] is not None:
             self.wid_hands.add_team(self.team, self.username, self.turn['current_player'])
         print("draw 2")
-        # print("draw")
-        # print(self.board.to_dic())
         self.wid_board.add_board(self.board)
 
     def join_game(self):
@@ -186,7 +180,6 @@ class Fenetre(QWidget):
         self.team = gm.Team(game_dic['team'])
         self.board = gm.Board(game_dic['board'])
         self.turn = game_dic['turn']
-        # print("Launch user : " + self.username)
         # self.wid_hands.add_team(self.team, self.username)
         # self.wid_board.add_board(self.board)
         print("Initialisation du jeu OK")
@@ -210,12 +203,9 @@ class Fenetre(QWidget):
     def handle_message_sub(self,game_dic):
         print("Message du publisher")
         game_dic = json.loads(game_dic)
-        print(game_dic)
         self.team = gm.Team(game_dic['team'])
         self.board = gm.Board(game_dic['board'])
-        print('tour 1')
         self.turn = game_dic['turn']
-        print('tour 2')
         self.draw_game()
         if self.game_started:
             if self.board.clues == 0:
@@ -237,10 +227,8 @@ class Fenetre(QWidget):
 
     def handle_but_play(self):
         print("On joue une carte")
-        print(str(self.team.player_dic[self.username].to_dic()))
         dic_cmd = {'command': 'play_card', 'player': self.team.player_dic[self.username].to_dic()}
         game_dic = self.client.make_message(dic_cmd)
-        print(game_dic)
         self.team = gm.Team(game_dic['team'])
         self.board = gm.Board(game_dic['board'])
         self.turn = game_dic['turn']
@@ -259,7 +247,6 @@ class Fenetre(QWidget):
         print("On défausse une carte")
         dic_cmd = {'command': 'discard_card', 'player': self.team.player_dic[self.username].to_dic()}
         game_dic = self.client.make_message(dic_cmd)
-        print(game_dic)
         self.team = gm.Team(game_dic['team'])
         self.board = gm.Board(game_dic['board'])
         self.draw_game()
@@ -278,7 +265,6 @@ class Fenetre(QWidget):
                 clue_selected = self.popup_clue.clues_list[i]
         dic_cmd = {'command': 'give_clue', 'target_player': self.popup_clue.combo_name.currentText(), 'clue': clue_selected}
         game_dic = self.client.make_message(dic_cmd)
-        print(game_dic)
         self.team = gm.Team(game_dic['team'])
         self.board = gm.Board(game_dic['board'])
         self.draw_game
@@ -289,9 +275,7 @@ class Fenetre(QWidget):
 
     def handle_card_clicked(self):
         dic_cmd = {'command': 'card_selected', 'team': self.team.to_dic()}
-        print("card clicked 1")
         game_dic = self.client.make_message(dic_cmd)
-        print("card clicked 2")
 
     def get_players(self):
         joueurs = self.team.player_dic.keys()
@@ -302,6 +286,7 @@ class QCarte(QPushButton):
     # Classe graphique pour representer une carte
     def __init__(self, carte=None, hidden=False):
         QPushButton.__init__(self)
+        self.carte = carte
         self.pixmap = QPixmap()
         self.hidden = hidden
         if carte is None:
@@ -311,10 +296,9 @@ class QCarte(QPushButton):
             if self.hidden:
                 path_to_im = "images/hidden.png"
             else:
-                path_to_im = "images/" + carte.to_string()
-            self.selected = carte.selected
+                path_to_im = "images/" + self.carte.to_string()
+            self.selected = self.carte.selected
         self.set_image(path_to_im)
-        self.carte = carte
         self.isclickable = (carte is not None)
         # self.selected = False
         self.clicked.connect(self.on_click)
@@ -470,10 +454,8 @@ class Popup_clue(QWidget):
         self.lab_nom.setFont(QFont("Brush Script MT", 25))
         self.combo_name = QComboBox()
         joueurs = parent.get_players()
-        print(joueurs)
         for joueur in joueurs:
-            print("Popup play : " + joueur)
-            if joueur is not self.top_parent.username:
+            if joueur != self.top_parent.username:
                 self.combo_name.addItem(joueur)
         self.lay_clued.addWidget(self.lab_nom)
         self.lay_clued.addWidget(self.combo_name)
@@ -556,7 +538,23 @@ class Widget_hands(QWidget):
             painter.begin(wid_carte.pixmap)
             painter.setPen(QColor(255, 255, 255, 190))
             painter.setFont(QFont('Decorative', 280))
-            painter.drawText(wid_carte.pixmap.rect(), Qt.AlignCenter, wid_carte.carte.revealed)
+            # painter.drawText(wid_carte.pixmap.rect(), Qt.AlignCenter, wid_carte.carte.revealed)
+            colors = ['w', 'y', 'g', 'b', 'r']
+            numbers = ['1', '2', '3', '4', '5']
+            width_carte = wid_carte.pixmap.rect().width()
+            height_carte = wid_carte.pixmap.rect().height()
+            res_fact = 1/3
+            width = width_carte*res_fact
+            height = height_carte*res_fact
+            x_start = int((width_carte - width)/2)
+            y_start = int((height_carte - height)/2)
+            rect_draw = QRect(x_start, y_start, width, height)
+            for col in colors:
+                if col in carte.revealed:
+                    painter.drawImage(rect_draw, QImage("images/token/" + col + ".png"))
+            for num in numbers:
+                if num in carte.revealed:
+                    painter.drawImage(rect_draw, QImage("images/token/" + num + ".png"))
             painter.end()
             wid_carte.pixmap = wid_carte.pixmap.scaled(int(scr_x/12), int(scr_x/12))
             wid_carte.setIcon(QIcon(wid_carte.pixmap))
