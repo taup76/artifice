@@ -193,10 +193,10 @@ class Fenetre(QWidget):
         if message_new_game['result'] == '':
             self.popup_join.set_status("Serveur rejoint, en attente de joueurs", "")
             self.popup_join.but_ok.setEnabled(False)
-            #self.popup_join.but_new.setEnabled(True)
+            self.popup_join.but_new.setEnabled(True)
         else:
             self.popup_join.set_status(message_new_game['result'], "error")
-            #self.popup_join.but_new.setEnabled(False)
+            self.popup_join.but_new.setEnabled(False)
         # self.popup_join.close()
         self.wid_hands.clear_hands()
 
@@ -409,7 +409,7 @@ class Popup_join(QWidget):
                                                "{border: none; text-decoration: underline; "
                                               "image: url(images/token/launch_game_hover.png);}")
 
-        #self.but_new.setEnabled(False)
+        self.but_new.setEnabled(False)
         self.lay_buttons.addWidget(self.but_ok)
         self.lay_buttons.addWidget(self.but_new)
         self.layout_top.addWidget(self.wid_buttons)
