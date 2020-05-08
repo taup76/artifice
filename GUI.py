@@ -193,10 +193,10 @@ class Fenetre(QWidget):
         if message_new_game['result'] == '':
             self.popup_join.set_status("Serveur rejoint, en attente de joueurs", "")
             self.popup_join.but_ok.setEnabled(False)
-            self.popup_join.but_new.setEnabled(True)
+            #self.popup_join.but_new.setEnabled(True)
         else:
             self.popup_join.set_status(message_new_game['result'], "error")
-            self.popup_join.but_new.setEnabled(False)
+            #self.popup_join.but_new.setEnabled(False)
         # self.popup_join.close()
         self.wid_hands.clear_hands()
 
@@ -389,18 +389,27 @@ class Popup_join(QWidget):
         self.wid_buttons.setLayout(self.lay_buttons)
         self.but_ok = QPushButton("")
         self.but_ok.setObjectName("but_ok")
-        self.setStyleSheet(self.styleSheet() + "QPushButton#but_ok "
-                                               "{border: none; text-decoration: none; image: url(images/token/join_server.png); min-height: 100px;} "
-                                               "QPushButton#but_ok:hover "
-                                               "{border: none; text-decoration: underline; image: url(images/token/join_server_hover.png);}")
+        #self.setStyleSheet(self.styleSheet() + "QPushButton#but_ok "
+        #                                       "{border: none; text-decoration: none; image: url(images/token/join_server.png); min-height: 100px;} "
+        #                                       "QPushButton#but_ok:hover "
+        #                                       "{border: none; text-decoration: underline; image: url(images/token/join_server_hover.png);}")
         self.but_new = QPushButton("")
         self.but_new.setObjectName("but_new")
-        self.setStyleSheet(self.styleSheet() + "QPushButton#but_new "
-                                               "{border: none; text-decoration: none; image: url(images/token/join_server.png); min-height: 100px;} "
+        self.setStyleSheet(self.styleSheet() + "QPushButton#but_ok "
+                                               "{border: none; text-decoration: none; "
+                                               "image: url(images/token/join_server.png); "
+                                               "min-height: 100px; min-width: 300px;} "
+                                               "QPushButton#but_ok:hover "
+                                               "{border: none; text-decoration: underline; "
+                                               "image: url(images/token/join_server_hover.png);}"
+                                             +"QPushButton#but_new "
+                                               "{border: none; text-decoration: none; "
+                                              "image: url(images/token/launch_game.png); min-height: 100px; min-width: 300px;} "
                                                "QPushButton#but_new:hover "
-                                               "{border: none; text-decoration: underline; image: url(images/token/join_server_hover.png);}")
+                                               "{border: none; text-decoration: underline; "
+                                              "image: url(images/token/launch_game_hover.png);}")
 
-        self.but_new.setEnabled(False)
+        #self.but_new.setEnabled(False)
         self.lay_buttons.addWidget(self.but_ok)
         self.lay_buttons.addWidget(self.but_new)
         self.layout_top.addWidget(self.wid_buttons)
