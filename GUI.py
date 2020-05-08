@@ -217,6 +217,24 @@ class Fenetre(QWidget):
         self.turn = game_dic['turn']
         print('tour 2')
         self.draw_game()
+        if self.game_started:
+            if self.board.clues == 0:
+                self.but_give_clue.setEnabled(False)
+                self.but_give_clue.setVisible(False)
+            else:
+                self.but_give_clue.setEnabled(True)
+                self.but_give_clue.setVisible(True)
+        if self.turn['endgame_message'] is not None:
+            print('PEERDUU')
+            msg = QMessageBox()
+            msg.setIcon(QMessageBox.Information)
+            msg.setText(self.turn['endgame_message'])
+            msg.setInformativeText("Nombre de tour : " + str(int((self.turn["turn_count"]-1)/len(self.team.player_dic))))
+            msg.setWindowTitle("Fin de la partie")
+            msg.setStandardButtons(QMessageBox.Ok)
+            msg.buttonClicked.connect(self.end_button)
+            msg.exec()
+
 
     def handle_but_play(self):
         print("On joue une carte")
@@ -228,16 +246,6 @@ class Fenetre(QWidget):
         self.board = gm.Board(game_dic['board'])
         self.turn = game_dic['turn']
         print(self.turn['endgame_message'])
-        if self.turn['endgame_message'] is not None:
-            print('PEERDUU')
-            msg = QMessageBox()
-            msg.setIcon(QMessageBox.Information)
-            msg.setText(self.turn['endgame_message'])
-            msg.setInformativeText("Nombre de tour : " + str(int((self.turn["turn_count"]-1)/len(self.team.player_dic))))
-            msg.setWindowTitle("Fin de la partie")
-            msg.setStandardButtons(QMessageBox.Ok)
-            msg.buttonClicked.connect(self.end_button)
-            msg.exec()
         self.draw_game()
 
     def end_button(self):
@@ -435,14 +443,12 @@ class Popup_clue(QWidget):
         joueurs = parent.get_players()
         for joueur in joueurs:
             self.combo_name.addItem(joueur)
-        
+        self.lay_clued.addItem(self.lab_nom)
+        self.lay_clued.addItem(self.combo_name)
 
         self.but_ok = QPushButton("OK")
         self.but_cancel = QPushButton("Annuler")
         self.layout_top.addRow(self.but_ok, self.but_cancel)
-
-    def set_param(self):
-        settings.setValue("ip_client", self.param_ip.text())
 
 
 class Widget_hands(QWidget):
