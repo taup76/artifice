@@ -266,13 +266,26 @@ class Fenetre(QWidget):
         self.draw_game()
 
     def handle_give_clue(self):
+        self.popup_clue = Popup_clue(self)
+        self.popup_clue.but_ok.clicked.connect(self.handle_ok_clue)
+        self.popup_clue.but_cancel.clicked.connect(self.handle_cancel_clue)
+        self.popup_clue.show()
         print("On donne une information")
-        dic_cmd = {'command': 'give_clue', 'current_player': self.username}
+
+    def handle_ok_clue(self):
+        print("On donne un indice")
+        for i in range(len(self.popup_clue.clues_list)):
+            if self.popup_clue.lay_gridclue.itemAt(i % 5, int(i/5)).widget().isChecked():
+                clue_selected = self.popup_clue.clues_list(i)
+        dic_cmd = {'command': 'give_clue', 'target_player': self.popup_clue.combo_name.currentText(), 'clue': clue_selected}
         game_dic = self.client.make_message(dic_cmd)
         print(game_dic)
         self.team = gm.Team(game_dic['team'])
         self.board = gm.Board(game_dic['board'])
-        self.draw_game()
+        self.draw_game
+
+    def handle_cancel_clue(self):
+        self.close()
 
     def handle_card_clicked(self):
         dic_cmd = {'command': 'card_selected', 'team': self.team.to_dic()}
@@ -433,6 +446,7 @@ class Popup_clue(QWidget):
 
     def __init__(self, parent):
         QWidget.__init__(self)
+        self.clue_selected = None
         self.top_parent = parent
         self.layout_top = QVBoxLayout()
         self.setLayout(self.layout_top)
@@ -440,17 +454,40 @@ class Popup_clue(QWidget):
         self.wid_clued_play = QWidget()
         self.lay_clued = QHBoxLayout()
         self.wid_clued_play.setLayout(self.lay_clued)
-        self.lab_nom = QLabel('Joueur à renseigner : ')
+        self.lab_nom = QLabel("Joueur à renseigner : ")
         self.combo_name = QComboBox()
         joueurs = parent.get_players()
+        print(joueurs)
         for joueur in joueurs:
-            self.combo_name.addItem(joueur)
-        self.lay_clued.addItem(self.lab_nom)
-        self.lay_clued.addItem(self.combo_name)
+            print("Popup play : " + joueur)
+            if joueur is not self.top_parent.username:
+                self.combo_name.addItem(joueur)
+        self.lay_clued.addWidget(self.lab_nom)
+        self.lay_clued.addWidget(self.combo_name)
+        self.layout_top.addWidget(self.wid_clued_play)
+        self.show()
 
+        self.clues_list = ['1', '2', '3', '4', '5', 'r', 'b', 'g', 'w', 'y']
+        self.wid_gridclue = QWidget()
+        self.lay_gridclue = QGridLayout()
+        self.wid_gridclue.setLayout(self.lay_gridclue)
+        for i in range(len(self.clues_list)):
+            self.radio_clue = QRadioButton()
+            # icon = QIcon()
+            # icon.addPixmap()
+            self.radio_clue.setIcon(QIcon(QPixmap("images/token/" + self.clues_list[i])))
+            self.radio_clue.setIconSize(QSize(50, 50))
+            self.lay_gridclue.addWidget(self.radio_clue, i % 5, int(i/5))
+        self.layout_top.addWidget(self.wid_gridclue)
+
+        self.wid_butpop = QWidget()
+        self.lay_butpop = QHBoxLayout()
+        self.wid_butpop.setLayout(self.lay_butpop)
         self.but_ok = QPushButton("OK")
         self.but_cancel = QPushButton("Annuler")
-        self.layout_top.addRow(self.but_ok, self.but_cancel)
+        self.lay_butpop.addWidget(self.but_ok)
+        self.lay_butpop.addWidget(self.but_cancel)
+        self.layout_top.addWidget(self.wid_butpop)
 
 
 class Widget_hands(QWidget):
