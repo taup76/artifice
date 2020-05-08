@@ -17,7 +17,6 @@ class Card:
         else:
             self.from_dic(dic)
 
-
     def to_string(self):
         return self.color + '' + str(self.value)
 
@@ -106,10 +105,10 @@ class Board:
             json_stack_dic[key] = self.stack_dic[key].to_array()
 
         return {"stack_dic": json_stack_dic,
-               "draw_list": self.draw_list.to_array(),
-               "discard_list": self.discard_list.to_array(),
-               "clues": self.clues,
-               "miss": self.miss}
+                "draw_list": self.draw_list.to_array(),
+                "discard_list": self.discard_list.to_array(),
+                "clues": self.clues,
+                "miss": self.miss}
 
     def from_dic(self, dic):
         self.miss = dic["miss"]
@@ -128,7 +127,7 @@ class Board:
                 rep = 1
 
             for color in self.stack_dic.keys():
-                for j in range(rep):
+                for _ in range(rep):
                     self.draw_list.append(Card(color, i))
         self.draw_list.shuffle()
 
@@ -177,7 +176,7 @@ class Player:
 
     def to_string(self):
         out_str = "Player " + self.name + '\n'
-        for card in self.card_list:
+        for card in self.card_list.card_list:
             out_str += card.to_string() + ' '
         return out_str
 
@@ -190,7 +189,7 @@ class Player:
         self.card_list = Stack(dic["card_list"])
 
     def init_hand(self, board, nb_card):
-        for i in range(nb_card):
+        for _ in range(nb_card):
             self.draw_card(board)
 
     def append(self, card):
@@ -313,6 +312,7 @@ class Turn:
             elif score <= 25:
                 self.endgame_message = "Score final " + str(score)+ "/25\n Extraordinaire, restera gravée dans les mémoires !"
             return
+
 
 class Game:
 
