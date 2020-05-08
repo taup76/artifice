@@ -25,7 +25,10 @@ def parse_msg(msg, game):
     else:
         result_msg = "Fonction serveur non definie"
 
-    game_dic = game.to_dic()
+    if command != 'finish_game':
+        game_dic = game.to_dic()
+    else:
+        game_dic = {}
     game_dic["result"] = result_msg
     return game_dic
 

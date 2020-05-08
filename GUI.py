@@ -208,6 +208,7 @@ class Fenetre(QWidget):
         self.turn = game_dic['turn']
         self.draw_game()
         if self.game_started:
+            self.show_buttons(self.turn.current_player == self.username)
             if self.board.clues == 0:
                 self.but_give_clue.setEnabled(False)
                 self.but_give_clue.setVisible(False)
@@ -225,7 +226,11 @@ class Fenetre(QWidget):
             msg.buttonClicked.connect(self.end_button)
             msg.exec()
 
-
+    def show_buttons(self, is_showed):
+        self.but_play.setVisible(is_showed)
+        self.but_dismiss.setVisible(is_showed)
+        self.but_give_clue(is_showed)
+        
     def handle_but_play(self):
         print("On joue une carte")
         dic_cmd = {'command': 'play_card', 'player': self.team.player_dic[self.username].to_dic()}
