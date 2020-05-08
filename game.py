@@ -13,7 +13,7 @@ class Card:
             else:
                 self.value = 0
             self.selected = False
-            self.revealed = 0  # note about w
+            self.revealed = ""  # note about w
         else:
             self.from_dic(dic)
 
@@ -216,11 +216,10 @@ class Player:
         board.add_clue()
         self.draw_card(board)
 
-    def receive_clue(self):
+    def receive_clue(self, clue):
         for card in self.card_list.card_list:
-            if card.selected:
-                print("REVEALED!!")
-                card.revealed = card.revealed + 1
+            if card.color == clue | card.value == int(clue):
+                card.revealed += clue
 
     def has_selected_card(self):
         for card in self.card_list.card_list:
@@ -424,20 +423,15 @@ class Game:
         self.turn.next_turn()
         return ""
 
-    def give_clue(self, current_player):
-        if current_player != self.turn.current_player:
-            return "This is not your turn"
-
-        # find player with selected cards
-        target_player, error_str = self.find_target_player()
-        if len(error_str) > 0:
-            return error_str
+    def give_clue(self, target_player_name, clue):
 
         # if no clue left, cannot give any clue
         if self.board.clues == 0:
             return "You cannot give any more clue"
 
-        target_player.receive_clue()
+        # find cards with given clue and select them
+        self.team.player_dic[target_player_name].receive_clue(clue)
+
         self.board.take_clue()
         self.team.unselect_all()
         self.turn.next_turn()
