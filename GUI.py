@@ -225,12 +225,25 @@ class Fenetre(QWidget):
                     self.but_give_clue.setEnabled(True)
         if self.turn['endgame_message'] is not None:
             msg = QMessageBox()
-            msg.setIcon(QMessageBox.Information)
+            print("end of game")
+
+            pix = QPixmap("images/token/Hanabi")
+            pix = pix.scaled(300,300,Qt.KeepAspectRatio)
+            msg.setIconPixmap(pix)
             msg.setText(self.turn['endgame_message'])
-            msg.setInformativeText("Nombre de tour : " + str(int((self.turn["turn_count"]-1)/len(self.team.player_dic))))
+
+            msg.setFont(QFont("Ink Free", 20))
+            msg.setInformativeText("Nombre de tours : " + str(int((self.turn["turn_count"]-1)/len(self.team.player_dic))))
             msg.setWindowTitle("Fin de la partie")
-            msg.setStandardButtons(QMessageBox.Ok)
-            msg.buttonClicked.connect(self.end_button)
+            but_ok = QPushButton()
+            but_ok.setObjectName("end_ok")
+            but_ok.setStyleSheet(self.styleSheet() + "QPushButton#end_ok "
+                                                   "{border: none; text-decoration: none; image: url(images/token/OK.png); min-height: 100px; min-width: 300px;} "
+                                                   "QPushButton#end_ok:hover "
+                                                   "{border: none; text-decoration: underline; image: url(images/token/OK_hover.png);}")
+
+            msg.addButton(but_ok, QMessageBox.YesRole)
+            but_ok.clicked.connect(self.end_button)
             msg.exec()
 
     def show_buttons(self, is_showed):
