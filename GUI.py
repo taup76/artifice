@@ -99,24 +99,33 @@ class Fenetre(QWidget):
         self.setStyleSheet(self.styleSheet() + "QPushButton#but_jouer "
                            "{border: none; text-decoration: none; image: url(images/token/play.png);} "
                            "QPushButton#but_jouer:hover "
-                           "{border: none; text-decoration: underline; image: url(images/token/play_hover.png);}")
-        self.but_play.setFont(QFont("Brush Script MT", 40))
+                           "{border: none; text-decoration: underline; image: url(images/token/play_hover.png);}"
+                           "QPushButton#but_jouer:!enabled "
+                           "{border: none; text-decoration: underline; image: url(images/token/play_hover.png);}"
+                           )
+        self.but_play.setFont(QFont("Ink Free", 40))
         self.but_play.clicked.connect(self.handle_but_play)
         self.but_dismiss = QPushButton("")
         self.but_dismiss.setObjectName("but_dismiss")
         self.setStyleSheet(self.styleSheet() + "QPushButton#but_dismiss "
                            "{border: none; text-decoration: none; image: url(images/token/discard.png);} "
                            "QPushButton#but_dismiss:hover "
-                           "{border: none; text-decoration: underline; image: url(images/token/discard_hover.png);}")
-        self.but_dismiss.setFont(QFont("Brush Script MT", 40))
+                           "{border: none; text-decoration: underline; image: url(images/token/discard_hover.png);}"
+                           "QPushButton#but_dismiss:!enabled "
+                           "{border: none; text-decoration: underline; image: url(images/token/discard_hover.png);}"
+                           )
+        self.but_dismiss.setFont(QFont("Ink Free", 40))
         self.but_dismiss.clicked.connect(self.handle_dismiss)
         self.but_give_clue = QPushButton("")
         self.but_give_clue.setObjectName("but_clue")
         self.setStyleSheet(self.styleSheet() + "QPushButton#but_clue "
                            "{border: none; text-decoration: none; image: url(images/token/clue.png);} "
                            "QPushButton#but_clue:hover "
-                           "{border: none; text-decoration: underline; image: url(images/token/clue_hover.png);}")
-        self.but_give_clue.setFont(QFont("Brush Script MT", 40))
+                           "{border: none; text-decoration: underline; image: url(images/token/clue_hover.png);}"
+                           "QPushButton#but_clue:!enabled "
+                           "{border: none; text-decoration: underline; image: url(images/token/clue_hover.png);}"
+                           )
+        self.but_give_clue.setFont(QFont("Ink Free", 40))
         self.but_give_clue.clicked.connect(self.handle_give_clue)
         self.layout_actions = QHBoxLayout()
         # self.layout_actions.setContentsMargins(int(self.res_x/5), int(self.res_y/5),
@@ -207,18 +216,13 @@ class Fenetre(QWidget):
         self.board = gm.Board(game_dic['board'])
         self.turn = game_dic['turn']
         self.draw_game()
-        print("TEST 1")
         if self.game_started:
-            print("TEST 2")
             self.show_buttons(self.turn['current_player'] == self.username)
-            print("TEST 3")
             if self.board.clues == 0:
                 self.but_give_clue.setEnabled(False)
-                self.but_give_clue.setVisible(False)
             else:
                 if self.turn['current_player'] == self.username:
                     self.but_give_clue.setEnabled(True)
-                    self.but_give_clue.setVisible(True)
         if self.turn['endgame_message'] is not None:
             msg = QMessageBox()
             msg.setIcon(QMessageBox.Information)
@@ -230,10 +234,10 @@ class Fenetre(QWidget):
             msg.exec()
 
     def show_buttons(self, is_showed):
-        self.but_play.setVisible(is_showed)
-        self.but_dismiss.setVisible(is_showed)
+        self.but_play.setEnabled(is_showed)
+        self.but_dismiss.setEnabled(is_showed)
         print("SHOW 2bis")
-        self.but_give_clue.setVisible(is_showed)
+        self.but_give_clue.setEnabled(is_showed)
         print("SHOW 3")
         
     def handle_but_play(self):
@@ -374,9 +378,11 @@ class Popup_join(QWidget):
         self.layout_top = QVBoxLayout()
         self.setLayout(self.layout_top)
         self.label_setjoueur = QLabel("Nom du joueur")
-        self.label_setjoueur.setFont(QFont("Brush Script MT", 25))
+        self.label_setjoueur.setFont(QFont("Ink Free", 25))
         self.layout_top.addWidget(self.label_setjoueur)
         self.field_joueur = QLineEdit("")
+        self.field_joueur.setStyleSheet('QLineEdit {color: black ; font: 15pt "Ink Free";}')
+        #self.field_joueur.setFont(Font("Ink Free", 25))
         self.layout_top.addWidget(self.field_joueur)
 
         self.wid_connected = QWidget()
@@ -402,12 +408,21 @@ class Popup_join(QWidget):
                                                "QPushButton#but_ok:hover "
                                                "{border: none; text-decoration: underline; "
                                                "image: url(images/token/join_server_hover.png);}"
+                                               "QPushButton#but_ok:!enabled "
+                                               "{image: url(images/token/join_server_hover.png);}"
                                              +"QPushButton#but_new "
                                                "{border: none; text-decoration: none; "
                                               "image: url(images/token/launch_game.png); min-height: 100px; min-width: 300px;} "
                                                "QPushButton#but_new:hover "
                                                "{border: none; text-decoration: underline; "
-                                              "image: url(images/token/launch_game_hover.png);}")
+                                              "image: url(images/token/launch_game_hover.png);}"
+                                              "QPushButton#but_new:!enabled "
+                                                "{image: url(images/token/launch_game_hover.png);}"
+                                             )
+        #QPushButton: !enabled
+        #{
+        #    background - color:  # ff0000;
+        #}
 
         self.but_new.setEnabled(False)
         self.lay_buttons.addWidget(self.but_ok)
@@ -416,9 +431,10 @@ class Popup_join(QWidget):
         self.show()
         self.update_players.connect(self.refresh, Qt.QueuedConnection)
         self.update_players.emit()
-        self.label_joueurs = [QLabel("Joueur 1"), QLabel("Joueur 2"), QLabel("Joueur 3"),
-                              QLabel("Joueur 4"), QLabel("Joueur 5")]
+        self.label_joueurs = [QLabel(""), QLabel(""), QLabel(""),
+                              QLabel(""), QLabel("")]
         for lab_jou in self.label_joueurs:
+            lab_jou.setStyleSheet('QLabel {color: black ; font: 15pt "Ink Free";}')
             self.layout_connected.addWidget(lab_jou)
         self.lab_status = QLabel('')
         self.lab_status.setObjectName("popup_join_status")
@@ -433,9 +449,9 @@ class Popup_join(QWidget):
 
     def set_status(self, status, type):
         if type == 'error':
-            self.lab_status.setStyleSheet('QLabel#popup_join_status {color: red}')
+            self.lab_status.setStyleSheet('QLabel#popup_join_status {color: red ; font: 10pt "Ink Free";}')
         else:
-            self.lab_status.setStyleSheet('QLabel#popup_join_status {color: black}')
+            self.lab_status.setStyleSheet('QLabel#popup_join_status {color: black; font: 10pt "Ink Free";}')
         self.lab_status.setText(status)
 
 
@@ -471,8 +487,9 @@ class Popup_clue(QWidget):
         self.lay_clued = QHBoxLayout()
         self.wid_clued_play.setLayout(self.lay_clued)
         self.lab_nom = QLabel("Joueur à renseigner : ")
-        self.lab_nom.setFont(QFont("Brush Script MT", 25))
+        self.lab_nom.setFont(QFont("Ink Free", 25))
         self.combo_name = QComboBox()
+        self.combo_name.setFont(QFont("Ink Free", 15))
         joueurs = parent.get_players()
         for joueur in joueurs:
             if joueur != self.top_parent.username:
@@ -535,14 +552,14 @@ class Widget_hands(QWidget):
         layout_card = QHBoxLayout()
         wid_name = QLabel(player.name)
         wid_name.setObjectName('player_name')
-        wid_name.setFont(QFont("Brush Script MT", 25))
+        wid_name.setFont(QFont("Ink Free", 25))
         wid_name.setStyleSheet("QLabel {color: rgba(0,0,0,50%);}")
         if player.name == current_player:
-            wid_name.setStyleSheet("QLabel {color: rgba(0,0,0,100%);}")
+            wid_name.setStyleSheet("QLabel {color: rgba(255,0,0,100%);}")
             effect = QGraphicsDropShadowEffect()
             effect.setBlurRadius(20)
             effect.setOffset(0)
-            effect.setColor(Qt.black)
+            effect.setColor(Qt.red)
             wid_name.setGraphicsEffect(effect)
         layout_hand.addWidget(wid_name)
         wid_cards = QWidget()
@@ -557,7 +574,7 @@ class Widget_hands(QWidget):
             painter = QPainter()
             painter.begin(wid_carte.pixmap)
             painter.setPen(QColor(255, 255, 255, 190))
-            painter.setFont(QFont('Decorative', 280))
+            painter.setFont(QFont('Ink Free', 280))
             # painter.drawText(wid_carte.pixmap.rect(), Qt.AlignCenter, wid_carte.carte.revealed)
             colors = ['w', 'y', 'g', 'b', 'r']
             numbers = ['1', '2', '3', '4', '5']
@@ -761,7 +778,8 @@ class Widget_board(QWidget):
         painter = QPainter()
         painter.begin(self.wid_pioche.pixmap())
         painter.setPen(QColor(255, 255, 255, 190))
-        painter.setFont(QFont('Decorative', 280))
+        font_size = self.wid_pioche.rect().size().height()/5
+        painter.setFont(QFont('Ink Free', font_size))
         painter.drawText(self.wid_pioche.rect(), Qt.AlignCenter, str(len(board.draw_list.card_list)))
         painter.end()
         self.layout_dpd.addWidget(self.wid_pioche)
