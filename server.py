@@ -47,17 +47,25 @@ def main():
 
     # create a game
     game = Game()
-    '''
+
     # debug commands
-    message = {'command': 'join_game', 'username': 'sd'}
-    game_dic = parse_msg(message, game)
-    message = {'command': 'start_game', 'username': 'sd'}
-    game_dic = parse_msg(message, game)
-    message = {'command': 'discard_card', 'player': {'name': 'sd', 'card_list': [{'color': 'r', 'value': 4, 'selected': True}, {'color': 'b', 'value': 4, 'selected': False}, {'color': 'y', 'value': 1, 'selected': False}, {'color': 'w', 'value': 4, 'selected': False}, {'color': 'y', 'value': 1, 'selected': False}]}}
-    game_dic = parse_msg(message, game)
-    print(game_dic)
-    exit()
-    '''
+    # message = {'command': 'join_game', 'username': 'sd'}
+    # game_dic = parse_msg(message, game)
+    # message = {'command': 'join_game', 'username': 'fn'}
+    # game_dic = parse_msg(message, game)
+    # message = {'command': 'join_game', 'username': 'ping'}
+    # game_dic = parse_msg(message, game)
+    # message = {'command': 'join_game', 'username': 'pong'}
+    # game_dic = parse_msg(message, game)
+    # message = {'command': 'join_game', 'username': 'ieng'}
+    # game_dic = parse_msg(message, game)
+    # message = {'command': 'start_game', 'username': 'sd'}
+    # game_dic = parse_msg(message, game)
+    # # message = {'command': 'discard_card', 'player': {'name': 'sd', 'card_list': [{'color': 'r', 'value': 4, 'selected': True}, {'color': 'b', 'value': 4, 'selected': False}, {'color': 'y', 'value': 1, 'selected': False}, {'color': 'w', 'value': 4, 'selected': False}, {'color': 'y', 'value': 1, 'selected': False}]}}
+    # # game_dic = parse_msg(message, game)
+    # print(game_dic)
+    # exit()
+
 
     while True:
         #  Wait for next request from client

@@ -26,6 +26,7 @@ class Artifice(QMainWindow):
         # self.setStyleSheet("QPushButton {border: none; text-decoration: none;} "
         #                    "QPushButton:hover {border: none; text-decoration: underline; image: url(images/b1.png);}")
         # self.setStyleSheet("QPushButton {border: 1px solid red;}")
+        # self.setStyleSheet("QWidget {border: 1px solid red;}")
         # self.setStyleSheet("QCarte:pressed {border: 1px solid red;}")
         # self.setStyleSheet("QPushButton:checked {border-style: outset; border-width: 10px;}")
         # self.setStyleSheet("QCarte:clicked {border-style: outset; border-width: 10px;}")
@@ -128,6 +129,7 @@ class Fenetre(QWidget):
         self.but_give_clue.setFont(QFont("Ink Free", 40))
         self.but_give_clue.clicked.connect(self.handle_give_clue)
         self.layout_actions = QHBoxLayout()
+        self.layout_actions.setSpacing(0)
         # self.layout_actions.setContentsMargins(int(self.res_x/5), int(self.res_y/5),
         #                                          int(self.res_x/5), int(self.res_y/5))
         self.wid_actions.setLayout(self.layout_actions)
@@ -139,6 +141,7 @@ class Fenetre(QWidget):
         self.layout_principal.addWidget(self.wid_board, 500)
         self.wid_right_panel = QWidget()
         self.layout_right_panel = QVBoxLayout()
+        self.layout_right_panel.setSpacing(0)
         self.wid_right_panel.setLayout(self.layout_right_panel)
         # self.layout_right_panel.addWidget(self.wid_buts_play)
         # self.layout_principal.addWidget(self.wid_clue_miss,3,1)
@@ -152,7 +155,6 @@ class Fenetre(QWidget):
     def draw_game(self):
         if self.turn['current_player'] is not None:
             self.wid_hands.add_team(self.team, self.username, self.turn['current_player'])
-        print("draw 2")
         self.wid_board.add_board(self.board)
 
     def join_game(self):
@@ -236,10 +238,8 @@ class Fenetre(QWidget):
     def show_buttons(self, is_showed):
         self.but_play.setEnabled(is_showed)
         self.but_dismiss.setEnabled(is_showed)
-        print("SHOW 2bis")
         self.but_give_clue.setEnabled(is_showed)
-        print("SHOW 3")
-        
+
     def handle_but_play(self):
         print("On joue une carte")
         dic_cmd = {'command': 'play_card', 'player': self.team.player_dic[self.username].to_dic()}
@@ -326,7 +326,7 @@ class QCarte(QPushButton):
 
     def set_image(self, path):
         self.pixmap = QPixmap(path)
-        # self.pixmap = self.pixmap.scaled(250, 250)
+        # self.pixmap = self.pixmap.scaled(self.width(), self.height())
 
         ButtonIcon = QIcon(self.pixmap)
         self.setIcon(ButtonIcon)
@@ -540,19 +540,26 @@ class Widget_hands(QWidget):
     def __init__(self, user = ""):
         QWidget.__init__(self)
         self.layout_hands = QVBoxLayout()
+        self.layout_hands.setSpacing(0)
+        self.layout_hands.setContentsMargins(0,0,0,0)
         self.setLayout(self.layout_hands)
         self.username = user
         self.team = gm.Team()
 
     def add_hand(self, player, current_player, team):
         self.team = team
+        nb_joueur = len(self.team.player_dic.keys())
         wid_hand = QWidget()
         layout_hand = QVBoxLayout()
+        layout_hand.setSpacing(0)
+        layout_hand.setContentsMargins(0,0,0,0)
         wid_hand.setLayout(layout_hand)
         layout_card = QHBoxLayout()
+        layout_card.setSpacing(0)
         wid_name = QLabel(player.name)
         wid_name.setObjectName('player_name')
-        wid_name.setFont(QFont("Ink Free", 25))
+        font_size = int(15*5/nb_joueur)
+        wid_name.setFont(QFont("Ink Free", font_size))
         wid_name.setStyleSheet("QLabel {color: rgba(0,0,0,50%);}")
         if player.name == current_player:
             wid_name.setStyleSheet("QLabel {color: rgba(255,0,0,100%);}")
@@ -564,6 +571,7 @@ class Widget_hands(QWidget):
         layout_hand.addWidget(wid_name)
         wid_cards = QWidget()
         layout_hand.addWidget(wid_cards)
+        layout_card.setContentsMargins(0,0,0,0)
         wid_cards.setLayout(layout_card)
         screen_size = self.screen().size()
         scr_x = screen_size.width()
@@ -593,7 +601,10 @@ class Widget_hands(QWidget):
                 if num in carte.revealed:
                     painter.drawImage(rect_draw, QImage("images/token/" + num + ".png"))
             painter.end()
-            wid_carte.pixmap = wid_carte.pixmap.scaled(int(scr_x/12), int(scr_x/12))
+            card_pix_scale = int(self.height()*5/15*5/nb_joueur)
+            # wid_carte.setIconSize(wid_carte.pixmap.size())
+            wid_carte.pixmap = wid_carte.pixmap.scaled(int(scr_x/10), int(scr_x/15*5/nb_joueur), Qt.KeepAspectRatio)
+            # wid_carte.setMaximumHeight(max_card_height)
             wid_carte.setIcon(QIcon(wid_carte.pixmap))
             wid_carte.setFixedSize(wid_carte.pixmap.size())
             wid_carte.clicked.connect(self.card_clicked)
@@ -684,8 +695,6 @@ class Widget_board(QWidget):
         self.img_label.setFixedHeight(p.rect().size().height())
         self.img_label.setFixedWidth(p.rect().size().width())
 
-        # print("Img_label : " + str(self.img_label.width()) + " " + str(self.img_label.height()))
-        # print("p : " + str(p.width()) + " " + str(p.height()))
         self.board_x = p.width()
         self.board_y = p.height()
 
@@ -770,16 +779,15 @@ class Widget_board(QWidget):
             lab_clue.setPixmap(pix_clue)
             self.layout_clue.addWidget(lab_clue)
         # On affiche les piles de pioche, la carte jouee et la defausse
-        # TODO ajouter la carte jouee
         self.wid_pioche = QLabel()
         default_pixmap = QPixmap("images/hidden")
         self.wid_pioche.setPixmap(default_pixmap)
         self.wid_pioche.setFixedSize(default_pixmap.size())
         painter = QPainter()
         painter.begin(self.wid_pioche.pixmap())
-        painter.setPen(QColor(255, 255, 255, 190))
+        painter.setPen(QColor(255, 255, 255, 255))
         font_size = self.wid_pioche.rect().size().height()/5
-        painter.setFont(QFont('Ink Free', font_size))
+        painter.setFont(QFont('Ink Free', int(font_size)))
         painter.drawText(self.wid_pioche.rect(), Qt.AlignCenter, str(len(board.draw_list.card_list)))
         painter.end()
         self.layout_dpd.addWidget(self.wid_pioche)

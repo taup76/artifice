@@ -36,14 +36,10 @@ class Client:
 
     def make_message(self, dic_command): # commande de la forme {'command' : 'start_game' ; 'params' : ['param1', 'param2', ...]
         mes_json = "{}"
-        # print("Message client")
-        # print(dic_command)
         if 'command' in dic_command:
             # mes_json = json.dumps(dic_command)
             self.socket.send_json(dic_command)
             self.message = self.socket.recv_json()
-            # print("Message recu :")
-            # print(self.message)
         else:
             print("Format inconnu de commande")
         return self.message
@@ -70,8 +66,6 @@ class SubListener(QtCore.QObject):
     def loop(self):
         while self.running:
             sub_message = self.sub_socket.recv_string()
-            print(sub_message)
             sub_message = sub_message.replace("message ", "")
-            print(sub_message)
             self.message.emit(sub_message)
 

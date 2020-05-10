@@ -89,7 +89,6 @@ class Board:
         out_str = 'stacks \n'
         for key in self.stack_dic.keys():
             out_str += key + ' '
-            print(self.stack_dic[key])
             for card in self.stack_dic[key].card_list:
                 out_str += card.to_string() + ' '
             out_str += '\n'
@@ -374,7 +373,6 @@ class Game:
         error_msg = ""
         current_player = Player("")
         # create player from received message
-        print(player_dic)
         rcvd_player = Player(dic=player_dic)
 
         if rcvd_player.name != self.turn.current_player:
@@ -385,8 +383,6 @@ class Game:
         card_list = rcvd_player.card_list.card_list
 
         for i in range(len(card_list)):
-            print("color  " + card_list[i].color)
-            print(card_list[i].selected)
             if card_list[i].selected:
                 selected_card_idx = i
                 break
