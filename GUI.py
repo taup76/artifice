@@ -150,10 +150,13 @@ class Fenetre(QWidget):
 
 
     def draw_game(self):
-        if self.turn['current_player'] is not None:
-            self.wid_hands.add_team(self.team, self.username, self.turn['current_player'])
-        print("draw 2")
-        self.wid_board.add_board(self.board)
+        print("draw game")
+        if self.game_started :
+            if self.turn['current_player'] is not None:
+                self.wid_hands.add_team(self.team, self.username, self.turn['current_player'])
+            if self.board is not None:
+                self.wid_board.add_board(self.board)
+        print("draw game finished")
 
     def join_game(self):
         dic_cmd = {'username': self.username}
@@ -169,6 +172,7 @@ class Fenetre(QWidget):
         self.popup_join.but_ok.clicked.connect(self.handle_ok_join)
         self.popup_join.but_new.clicked.connect(self.handle_launch)
         self.popup_join.show()
+        print("popup join show")
 
     def open_popup_param(self):
         self.popup_param = Popup_param(self)
@@ -212,18 +216,31 @@ class Fenetre(QWidget):
     def handle_message_sub(self,game_dic):
         print("Message du publisher")
         game_dic = json.loads(game_dic)
-        self.team = gm.Team(game_dic['team'])
-        self.board = gm.Board(game_dic['board'])
-        self.turn = game_dic['turn']
+        if 'team' in game_dic:
+            self.team = gm.Team(game_dic['team'])
+        else:
+            self.team = gm.Team()
+        if 'board' in game_dic:
+            self.board = gm.Board(game_dic['board'])
+        else:
+            self.board = gm.Board()
+        if 'turn' in game_dic:
+            self.turn = game_dic['turn']
+        else:
+            self.turn = None
+
         self.draw_game()
         if self.game_started:
+            # enable or disable buttons depending on player's turn
             self.show_buttons(self.turn['current_player'] == self.username)
             if self.board.clues == 0:
                 self.but_give_clue.setEnabled(False)
             else:
                 if self.turn['current_player'] == self.username:
                     self.but_give_clue.setEnabled(True)
-        if self.turn['endgame_message'] is not None:
+
+        # if end of game, launch end of game popup
+        if self.game_started and self.turn['endgame_message'] is not None:
             msg = QMessageBox()
             print("end of game")
 
@@ -257,11 +274,11 @@ class Fenetre(QWidget):
         print("On joue une carte")
         dic_cmd = {'command': 'play_card', 'player': self.team.player_dic[self.username].to_dic()}
         game_dic = self.client.make_message(dic_cmd)
-        self.team = gm.Team(game_dic['team'])
-        self.board = gm.Board(game_dic['board'])
-        self.turn = game_dic['turn']
+        #self.team = gm.Team(game_dic['team'])
+        #self.board = gm.Board(game_dic['board'])
+        #self.turn = game_dic['turn']
         print(self.turn['endgame_message'])
-        self.draw_game()
+        #self.draw_game()
 
     def end_button(self):
         print("Partie terminée")
@@ -270,14 +287,15 @@ class Fenetre(QWidget):
         # self.but_give_clue.setEnabled(False)
         dic_cmd = {'command': 'finish_game'}
         game_dic = self.client.make_message(dic_cmd)
+        self.game_started = False
 
     def handle_dismiss(self):
         print("On défausse une carte")
         dic_cmd = {'command': 'discard_card', 'player': self.team.player_dic[self.username].to_dic()}
         game_dic = self.client.make_message(dic_cmd)
-        self.team = gm.Team(game_dic['team'])
-        self.board = gm.Board(game_dic['board'])
-        self.draw_game()
+        #self.team = gm.Team(game_dic['team'])
+        #self.board = gm.Board(game_dic['board'])
+        #self.draw_game()
 
     def handle_give_clue(self):
         self.popup_clue = Popup_clue(self)
@@ -293,9 +311,9 @@ class Fenetre(QWidget):
                 clue_selected = self.popup_clue.clues_list[i]
         dic_cmd = {'command': 'give_clue', 'target_player': self.popup_clue.combo_name.currentText(), 'clue': clue_selected}
         game_dic = self.client.make_message(dic_cmd)
-        self.team = gm.Team(game_dic['team'])
-        self.board = gm.Board(game_dic['board'])
-        self.draw_game
+        #self.team = gm.Team(game_dic['team'])
+        #self.board = gm.Board(game_dic['board'])
+        #self.draw_game
         self.popup_clue.close()
 
     def handle_cancel_clue(self):
@@ -386,6 +404,7 @@ class Popup_join(QWidget):
     update_players = pyqtSignal()
 
     def __init__(self, parent):
+        print("Popup join")
         QWidget.__init__(self)
         self.top_parent = parent
         self.layout_top = QVBoxLayout()
@@ -452,6 +471,7 @@ class Popup_join(QWidget):
         self.lab_status = QLabel('')
         self.lab_status.setObjectName("popup_join_status")
         self.layout_top.addWidget(self.lab_status)
+        print("popup init finished")
 
     def refresh(self):
         joueurs = self.top_parent.get_players()
