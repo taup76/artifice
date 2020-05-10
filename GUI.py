@@ -285,6 +285,7 @@ class Fenetre(QWidget):
         # self.but_give_clue.setEnabled(False)
         dic_cmd = {'command': 'finish_game'}
         game_dic = self.client.make_message(dic_cmd)
+        self.game_started = False
 
     def handle_dismiss(self):
         print("On défausse une carte")
