@@ -26,7 +26,6 @@ class Artifice(QMainWindow):
         # self.setStyleSheet("QPushButton {border: none; text-decoration: none;} "
         #                    "QPushButton:hover {border: none; text-decoration: underline; image: url(images/b1.png);}")
         # self.setStyleSheet("QPushButton {border: 1px solid red;}")
-        # self.setStyleSheet("QWidget {border: 1px solid red;}")
         # self.setStyleSheet("QCarte:pressed {border: 1px solid red;}")
         # self.setStyleSheet("QPushButton:checked {border-style: outset; border-width: 10px;}")
         # self.setStyleSheet("QCarte:clicked {border-style: outset; border-width: 10px;}")
@@ -153,9 +152,13 @@ class Fenetre(QWidget):
 
 
     def draw_game(self):
-        if self.turn['current_player'] is not None:
-            self.wid_hands.add_team(self.team, self.username, self.turn['current_player'])
-        self.wid_board.add_board(self.board)
+        print("draw game")
+        if self.game_started :
+            if self.turn['current_player'] is not None:
+                self.wid_hands.add_team(self.team, self.username, self.turn['current_player'])
+            if self.board is not None:
+                self.wid_board.add_board(self.board)
+        print("draw game finished")
 
     def join_game(self):
         dic_cmd = {'username': self.username}
@@ -214,9 +217,19 @@ class Fenetre(QWidget):
     def handle_message_sub(self,game_dic):
         print("Message du publisher")
         game_dic = json.loads(game_dic)
-        self.team = gm.Team(game_dic['team'])
-        self.board = gm.Board(game_dic['board'])
-        self.turn = game_dic['turn']
+        if 'team' in game_dic:
+            self.team = gm.Team(game_dic['team'])
+        else:
+            self.team = gm.Team()
+        if 'board' in game_dic:
+            self.board = gm.Board(game_dic['board'])
+        else:
+            self.board = gm.Board()
+        if 'turn' in game_dic:
+            self.turn = game_dic['turn']
+        else:
+            self.turn = None
+
         self.draw_game()
         if self.game_started:
             self.show_buttons(self.turn['current_player'] == self.username)
@@ -225,14 +238,29 @@ class Fenetre(QWidget):
             else:
                 if self.turn['current_player'] == self.username:
                     self.but_give_clue.setEnabled(True)
-        if self.turn['endgame_message'] is not None:
+
+        # if end of game, launch end of game popup
+        if self.game_started and self.turn['endgame_message'] is not None:
             msg = QMessageBox()
-            msg.setIcon(QMessageBox.Information)
+            print("end of game")
+
+            pix = QPixmap("images/token/Hanabi")
+            pix = pix.scaled(300,300,Qt.KeepAspectRatio)
+            msg.setIconPixmap(pix)
             msg.setText(self.turn['endgame_message'])
-            msg.setInformativeText("Nombre de tour : " + str(int((self.turn["turn_count"]-1)/len(self.team.player_dic))))
+
+            msg.setFont(QFont("Ink Free", 20))
+            msg.setInformativeText("Nombre de tours : " + str(int((self.turn["turn_count"]-1)/len(self.team.player_dic))))
             msg.setWindowTitle("Fin de la partie")
-            msg.setStandardButtons(QMessageBox.Ok)
-            msg.buttonClicked.connect(self.end_button)
+            but_ok = QPushButton()
+            but_ok.setObjectName("end_ok")
+            but_ok.setStyleSheet(self.styleSheet() + "QPushButton#end_ok "
+                                                   "{border: none; text-decoration: none; image: url(images/token/OK.png); min-height: 100px; min-width: 300px;} "
+                                                   "QPushButton#end_ok:hover "
+                                                   "{border: none; text-decoration: underline; image: url(images/token/OK_hover.png);}")
+
+            msg.addButton(but_ok, QMessageBox.YesRole)
+            but_ok.clicked.connect(self.end_button)
             msg.exec()
 
     def show_buttons(self, is_showed):
@@ -244,11 +272,11 @@ class Fenetre(QWidget):
         print("On joue une carte")
         dic_cmd = {'command': 'play_card', 'player': self.team.player_dic[self.username].to_dic()}
         game_dic = self.client.make_message(dic_cmd)
-        self.team = gm.Team(game_dic['team'])
-        self.board = gm.Board(game_dic['board'])
-        self.turn = game_dic['turn']
+        #self.team = gm.Team(game_dic['team'])
+        #self.board = gm.Board(game_dic['board'])
+        #self.turn = game_dic['turn']
         print(self.turn['endgame_message'])
-        self.draw_game()
+        #self.draw_game()
 
     def end_button(self):
         print("Partie terminée")
@@ -262,9 +290,9 @@ class Fenetre(QWidget):
         print("On défausse une carte")
         dic_cmd = {'command': 'discard_card', 'player': self.team.player_dic[self.username].to_dic()}
         game_dic = self.client.make_message(dic_cmd)
-        self.team = gm.Team(game_dic['team'])
-        self.board = gm.Board(game_dic['board'])
-        self.draw_game()
+        #self.team = gm.Team(game_dic['team'])
+        #self.board = gm.Board(game_dic['board'])
+        #self.draw_game()
 
     def handle_give_clue(self):
         self.popup_clue = Popup_clue(self)
@@ -280,9 +308,9 @@ class Fenetre(QWidget):
                 clue_selected = self.popup_clue.clues_list[i]
         dic_cmd = {'command': 'give_clue', 'target_player': self.popup_clue.combo_name.currentText(), 'clue': clue_selected}
         game_dic = self.client.make_message(dic_cmd)
-        self.team = gm.Team(game_dic['team'])
-        self.board = gm.Board(game_dic['board'])
-        self.draw_game
+        #self.team = gm.Team(game_dic['team'])
+        #self.board = gm.Board(game_dic['board'])
+        #self.draw_game
         self.popup_clue.close()
 
     def handle_cancel_clue(self):
@@ -540,26 +568,19 @@ class Widget_hands(QWidget):
     def __init__(self, user = ""):
         QWidget.__init__(self)
         self.layout_hands = QVBoxLayout()
-        self.layout_hands.setSpacing(0)
-        self.layout_hands.setContentsMargins(0,0,0,0)
         self.setLayout(self.layout_hands)
         self.username = user
         self.team = gm.Team()
 
     def add_hand(self, player, current_player, team):
         self.team = team
-        nb_joueur = len(self.team.player_dic.keys())
         wid_hand = QWidget()
         layout_hand = QVBoxLayout()
-        layout_hand.setSpacing(0)
-        layout_hand.setContentsMargins(0,0,0,0)
         wid_hand.setLayout(layout_hand)
         layout_card = QHBoxLayout()
-        layout_card.setSpacing(0)
         wid_name = QLabel(player.name)
         wid_name.setObjectName('player_name')
-        font_size = int(15*5/nb_joueur)
-        wid_name.setFont(QFont("Ink Free", font_size))
+        wid_name.setFont(QFont("Ink Free", 25))
         wid_name.setStyleSheet("QLabel {color: rgba(0,0,0,50%);}")
         if player.name == current_player:
             wid_name.setStyleSheet("QLabel {color: rgba(255,0,0,100%);}")
@@ -571,7 +592,6 @@ class Widget_hands(QWidget):
         layout_hand.addWidget(wid_name)
         wid_cards = QWidget()
         layout_hand.addWidget(wid_cards)
-        layout_card.setContentsMargins(0,0,0,0)
         wid_cards.setLayout(layout_card)
         screen_size = self.screen().size()
         scr_x = screen_size.width()
@@ -601,10 +621,7 @@ class Widget_hands(QWidget):
                 if num in carte.revealed:
                     painter.drawImage(rect_draw, QImage("images/token/" + num + ".png"))
             painter.end()
-            card_pix_scale = int(self.height()*5/15*5/nb_joueur)
-            # wid_carte.setIconSize(wid_carte.pixmap.size())
-            wid_carte.pixmap = wid_carte.pixmap.scaled(int(scr_x/10), int(scr_x/15*5/nb_joueur), Qt.KeepAspectRatio)
-            # wid_carte.setMaximumHeight(max_card_height)
+            wid_carte.pixmap = wid_carte.pixmap.scaled(int(scr_x/12), int(scr_x/12))
             wid_carte.setIcon(QIcon(wid_carte.pixmap))
             wid_carte.setFixedSize(wid_carte.pixmap.size())
             wid_carte.clicked.connect(self.card_clicked)
@@ -695,6 +712,8 @@ class Widget_board(QWidget):
         self.img_label.setFixedHeight(p.rect().size().height())
         self.img_label.setFixedWidth(p.rect().size().width())
 
+        # print("Img_label : " + str(self.img_label.width()) + " " + str(self.img_label.height()))
+        # print("p : " + str(p.width()) + " " + str(p.height()))
         self.board_x = p.width()
         self.board_y = p.height()
 
@@ -779,15 +798,16 @@ class Widget_board(QWidget):
             lab_clue.setPixmap(pix_clue)
             self.layout_clue.addWidget(lab_clue)
         # On affiche les piles de pioche, la carte jouee et la defausse
+        # TODO ajouter la carte jouee
         self.wid_pioche = QLabel()
         default_pixmap = QPixmap("images/hidden")
         self.wid_pioche.setPixmap(default_pixmap)
         self.wid_pioche.setFixedSize(default_pixmap.size())
         painter = QPainter()
         painter.begin(self.wid_pioche.pixmap())
-        painter.setPen(QColor(255, 255, 255, 255))
+        painter.setPen(QColor(255, 255, 255, 190))
         font_size = self.wid_pioche.rect().size().height()/5
-        painter.setFont(QFont('Ink Free', int(font_size)))
+        painter.setFont(QFont('Ink Free', font_size))
         painter.drawText(self.wid_pioche.rect(), Qt.AlignCenter, str(len(board.draw_list.card_list)))
         painter.end()
         self.layout_dpd.addWidget(self.wid_pioche)
